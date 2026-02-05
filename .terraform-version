@@ -1,1 +1,1 @@
-echo "1.14.1" > .terraform-version
+1.14.1

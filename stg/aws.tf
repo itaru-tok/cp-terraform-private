@@ -6,5 +6,5 @@ module "vpc" {
 module "subnet" {
   source = "../modules/aws/subnet"
   env    = "stg"
-  vpc_id = module.vpc.id_cloud_pratica
+  vpc_id = module.vpc.id
 }

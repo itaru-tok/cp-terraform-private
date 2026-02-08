@@ -1,0 +1,5 @@
+version: 1
+interface:
+  display_name: Terraform Importer
+  short_description: Prepare modular Terraform import tasks and run plan-only checks.
+  default_prompt: Prepare modular Terraform definitions and import blocks for existing AWS resources, then run init/plan only. Do not run apply or state mv.

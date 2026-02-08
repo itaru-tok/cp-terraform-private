@@ -9,3 +9,9 @@ resource "aws_route_table" "public_rt" {
     Name = "cp-rtb-public-${var.env}"
   }
 }
+
+resource "aws_route_table_association" "public_subnet" {
+  for_each       = toset(var.public_subnet_ids)
+  route_table_id = aws_route_table.public_rt.id
+  subnet_id      = each.value
+}

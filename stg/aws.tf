@@ -16,8 +16,10 @@ module "igw" {
 }
 
 module "rtb" {
-  source     = "../modules/aws/route_table"
-  env        = local.env
-  vpc_id     = module.vpc.id
-  gateway_id = module.igw.id
+  source            = "../modules/aws/route_table"
+  env               = local.env
+  vpc_id            = module.vpc.id
+  gateway_id        = module.igw.id
+  public_subnet_ids = local.public_subnet_ids
 }
+

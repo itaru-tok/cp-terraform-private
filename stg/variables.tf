@@ -6,4 +6,8 @@ locals {
     module.subnet.id_public_subnet_1a,
     module.subnet.id_public_subnet_1c
   ]
+  private_subnet_ids = [
+    module.subnet.id_private_subnet_1a,
+    module.subnet.id_private_subnet_1c
+  ]
 }

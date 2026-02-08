@@ -40,3 +40,9 @@ module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
   env    = local.env
 }
+
+module "sqs" {
+  source     = "../modules/aws/sqs"
+  env        = local.env
+  account_id = local.account_id
+}

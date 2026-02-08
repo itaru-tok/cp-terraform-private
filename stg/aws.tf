@@ -14,3 +14,10 @@ module "igw" {
   env    = local.env
   vpc_id = module.vpc.id
 }
+
+module "rtb" {
+  source     = "../modules/aws/route_table"
+  env        = local.env
+  vpc_id     = module.vpc.id
+  gateway_id = module.igw.id
+}

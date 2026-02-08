@@ -46,3 +46,11 @@ module "sqs" {
   env        = local.env
   account_id = local.account_id
 }
+
+module "ses" {
+  source                 = "../modules/aws/ses"
+  env                    = local.env
+  domain                 = local.ses_domain
+  mail_from_domain       = local.ses_mail_from_domain
+  behavior_on_mx_failure = "USE_DEFAULT_VALUE"
+}

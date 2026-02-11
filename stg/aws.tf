@@ -54,3 +54,8 @@ module "ses" {
   mail_from_domain       = local.ses_mail_from_domain
   behavior_on_mx_failure = "USE_DEFAULT_VALUE"
 }
+
+module "iam_role" {
+  source = "../modules/aws/iam_role"
+  env    = local.env
+}

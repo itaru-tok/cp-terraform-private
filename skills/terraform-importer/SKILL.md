@@ -70,6 +70,15 @@ import {
   - plan result and remaining blockers
 - Explicitly state that `apply` and `state mv` were not run.
 
+## 7) Post-import operating mode (per resource type)
+
+- Apply this rule per AWS resource type/service (for example IAM, SQS, SES).
+- For each resource type, do first implementation with import to establish a correct template/module pattern.
+- For the same resource type after first success, reuse that established template/module pattern.
+- Keep import-first workflow only for the first case of that resource type or when adopting pre-existing unmanaged resources.
+- Remove or archive `stg/imports_<service>.tf` after each import task is completed and verified.
+- For managed resources of already-templated types, use normal `plan/apply` workflow.
+
 ## References
 
 - Import templates and resource-specific notes: `references/aws-import-templates.md`

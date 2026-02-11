@@ -36,6 +36,13 @@ Follow this workflow to prepare import tasks only.
 - Keep names aligned to existing naming convention (`cp-...-${var.env}`).
 - Avoid introducing unrelated refactors.
 
+### IAM modeling rule
+
+- Keep IAM role and policy attachments in `modules/aws/iam_role`.
+- Do not use `data.aws_iam_policy` for managed policy attachments; write `policy_arn` directly in `aws_iam_role_policy_attachment`.
+- If custom policies are required, split files inside the same IAM module (for example `custom_policies.tf`) and define `aws_iam_policy` there.
+- Keep custom policy attachment resources in the same IAM module; do not create a separate service module only for attachments.
+
 ## 4) Add import blocks
 
 - Place import blocks in `stg/imports_<service>.tf`.

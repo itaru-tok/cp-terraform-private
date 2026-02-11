@@ -59,3 +59,23 @@ resource "aws_iam_role_policy_attachment" "cp_bastion" {
   role       = aws_iam_role.cp_bastion.name
   policy_arn = each.value
 }
+
+/************************************************************
+cp-db-migrator
+************************************************************/
+resource "aws_iam_role" "cp_db_migrator" {
+  name = "cp-db-migrator-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}

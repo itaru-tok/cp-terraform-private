@@ -76,6 +76,11 @@ module "rds" {
   db_security_group_id = module.security_group.id_db
 }
 
+module "ecs" {
+  source = "../modules/aws/ecs"
+  env    = local.env
+}
+
 module "acm_itaru_uk_ap_northeast_1" {
   source      = "../modules/aws/acm_unit"
   domain_name = "*.${local.base_host}"

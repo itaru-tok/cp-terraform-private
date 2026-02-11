@@ -230,3 +230,32 @@ resource "aws_iam_role_policy_attachment" "cp_scheduler_cost_cutter" {
   role       = aws_iam_role.cp_scheduler_cost_cutter.name
   policy_arn = each.value
 }
+
+/************************************************************
+administrator
+************************************************************/
+resource "aws_iam_role" "administrator" {
+  name = "administrator-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::043309350350:root"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "administrator" {
+  for_each = {
+    administrator = "arn:aws:iam::aws:policy/AdministratorAccess"
+  }
+
+  role       = aws_iam_role.administrator.name
+  policy_arn = each.value
+}

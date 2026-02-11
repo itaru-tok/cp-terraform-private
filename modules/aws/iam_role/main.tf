@@ -169,3 +169,33 @@ resource "aws_iam_role_policy_attachment" "cp_slack_metrics_client" {
   role       = aws_iam_role.cp_slack_metrics_client.name
   policy_arn = each.value
 }
+
+/************************************************************
+cp-scheduler-slack-metrics
+************************************************************/
+resource "aws_iam_role" "cp_scheduler_slack_metrics" {
+  name = "cp-scheduler-slack-metrics-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_scheduler_slack_metrics" {
+  for_each = {
+    ecs_run_task          = aws_iam_policy.ecs_run_task.arn
+    pass_role_to_ecs_task = aws_iam_policy.pass_role_to_ecs_task.arn
+  }
+
+  role       = aws_iam_role.cp_scheduler_slack_metrics.name
+  policy_arn = each.value
+}

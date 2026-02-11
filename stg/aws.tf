@@ -50,7 +50,7 @@ module "sqs" {
 module "ses" {
   source                 = "../modules/aws/ses"
   env                    = local.env
-  domain                 = local.ses_domain
+  domain                 = local.base_host
   mail_from_domain       = local.ses_mail_from_domain
   behavior_on_mx_failure = "USE_DEFAULT_VALUE"
 }
@@ -74,4 +74,20 @@ module "rds" {
   private_subnet_1a_id = module.subnet.id_private_subnet_1a
   private_subnet_1c_id = module.subnet.id_private_subnet_1c
   db_security_group_id = module.security_group.id_db
+}
+
+module "acm_itaru_uk_ap_northeast_1" {
+  source      = "../modules/aws/acm_unit"
+  domain_name = "*.${local.base_host}"
+  providers = {
+    aws = aws
+  }
+}
+
+module "acm_itaru_uk_us_east_1" {
+  source      = "../modules/aws/acm_unit"
+  domain_name = "*.${local.base_host}"
+  providers = {
+    aws = aws.us_east_1
+  }
 }

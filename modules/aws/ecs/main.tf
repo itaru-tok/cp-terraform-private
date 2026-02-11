@@ -18,7 +18,6 @@ resource "aws_ecs_cluster" "cloud_pratica_backend" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "cloud_pratica_backend" {
-  cluster_name = aws_ecs_cluster.cloud_pratica_backend.name
-
+  cluster_name       = aws_ecs_cluster.cloud_pratica_backend.name
   capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 }

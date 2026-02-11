@@ -81,6 +81,37 @@ module "ecs" {
   env    = local.env
 }
 
+module "ecs_task_definition" {
+  source = "../modules/aws/ecs_task_definition"
+
+  env = local.env
+
+  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:f7f0df5"
+  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:f7f0df5"
+
+  ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
+  ecs_task_role_arn_slack_metrics = module.iam_role.role_arn_cp_slack_metrics_backend
+  ecs_task_role_arn_db_migrator   = module.iam_role.role_arn_cp_db_migrator
+
+  secrets_manager_arn_db_main_instance = module.secrets_manager.arn_db_main_instance
+  arn_cp_config_bucket                 = "arn:aws:s3:::cp-itaru-config-stg"
+
+  ecs_task_specs = {
+    slack_metrics_api = {
+      cpu    = 256
+      memory = 512
+    }
+    slack_metrics_batch = {
+      cpu    = 256
+      memory = 512
+    }
+    db_migrator = {
+      cpu    = 256
+      memory = 512
+    }
+  }
+}
+
 module "acm_itaru_uk_ap_northeast_1" {
   source      = "../modules/aws/acm_unit"
   domain_name = "*.${local.base_host}"

@@ -140,3 +140,32 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   role       = aws_iam_role.ecs_task_execution.name
   policy_arn = each.value
 }
+
+/************************************************************
+cp-slack-metrics-client
+************************************************************/
+resource "aws_iam_role" "cp_slack_metrics_client" {
+  name = "cp-slack-metrics-client-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "amplify.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_slack_metrics_client" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.cp_slack_metrics_client.name
+  policy_arn = each.value
+}

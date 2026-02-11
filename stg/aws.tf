@@ -122,6 +122,26 @@ module "ecs_task_definition" {
   }
 }
 
+module "event_bridge_scheduler" {
+  source             = "../modules/aws/event_bridge_scheduler"
+  env                = local.env
+  private_subnet_ids = [module.subnet.id_private_subnet_1a]
+
+  slack_metrics = {
+    iam_role_arn                             = module.iam_role.role_arn_cp_scheduler_slack_metrics
+    ecs_cluster_arn                          = module.ecs.ecs_cluster_arn_cloud_pratica_backend
+    ecs_task_definition_arn_without_revision = module.ecs_task_definition.arn_without_revision_slack_metrics_batch
+    security_group_id                        = module.security_group.id_slack_metrics_backend
+  }
+
+  cost_cutter = {
+    enable                                = true
+    iam_role_arn                          = module.iam_role.role_arn_cp_scheduler_cost_cutter
+    ec2_instance_ids                      = [module.ec2.id_nat_1a, module.ec2.id_bastion]
+    ecs_cluster_arn_cloud_pratica_backend = module.ecs.ecs_cluster_arn_cloud_pratica_backend
+  }
+}
+
 module "acm_itaru_uk_ap_northeast_1" {
   source      = "../modules/aws/acm_unit"
   domain_name = "*.${local.base_host}"

@@ -9,3 +9,7 @@ output "distribution_id" {
 output "zone_id_us_east_1" {
   value = "Z2FDTNDATAQYW2"
 }
+
+output "domain_name" {
+  value = aws_cloudfront_distribution.slack_metrics.domain_name
+}

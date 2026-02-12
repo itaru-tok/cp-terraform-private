@@ -189,3 +189,40 @@ module "acm_itaru_uk_us_east_1" {
     aws = aws.us_east_1
   }
 }
+
+module "route53_itaru_uk" {
+  source    = "../modules/aws/route53_unit"
+  zone_name = local.base_host
+
+  records = [
+    {
+      name = "sm-api.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = module.alb.dns_name
+        zone_id                = module.alb.zone_id_ap_northeast_1
+        evaluate_target_health = true
+      }
+    },
+    {
+      name = "sm.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = "d14ymjy6njwiwh.cloudfront.net."
+        zone_id                = module.cloudfront.zone_id_us_east_1
+        evaluate_target_health = false
+      }
+    },
+    {
+      name   = trimsuffix(tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_name, ".")
+      type   = "CNAME"
+      values = [tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_value]
+      ttl    = 300
+    }
+  ]
+
+  ses = {
+    enable      = true
+    dkim_tokens = module.ses.dkim_tokens
+  }
+}

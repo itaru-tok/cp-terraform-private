@@ -31,6 +31,12 @@ module "security_group" {
   vpc_id = module.vpc.id
 }
 
+module "target_group" {
+  source = "../modules/aws/target_group"
+  env    = local.env
+  vpc_id = module.vpc.id
+}
+
 module "ecr" {
   source = "../modules/aws/ecr"
   env    = local.env
@@ -85,7 +91,7 @@ module "ecs" {
     task_definition        = module.ecs_task_definition.arn_slack_metrics_api
     enable_execute_command = true
     capacity_provider      = "FARGATE_SPOT"
-    target_group_arn       = "arn:aws:elasticloadbalancing:ap-northeast-1:424848769759:targetgroup/slack-metrics-api-stg/9bf1812772fd7368"
+    target_group_arn       = module.target_group.arn_slack_metrics_api
     security_group_ids     = [module.security_group.id_slack_metrics_backend]
     subnet_ids             = local.private_subnet_ids
   }

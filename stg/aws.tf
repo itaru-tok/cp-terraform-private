@@ -57,6 +57,17 @@ module "s3" {
   env    = local.env
 }
 
+module "cloudfront" {
+  source              = "../modules/aws/cloudfront"
+  env                 = local.env
+  certificate_arn     = module.acm_itaru_uk_us_east_1.arn
+  s3_origin_id        = "s3-slack-metrics-${local.env}"
+  s3_domain_name      = "cp-slack-metrics-itaru-${local.env}.s3.ap-northeast-1.amazonaws.com"
+  amplify_origin_id   = "amplify-slack-metrics-${local.env}"
+  amplify_domain_name = "develop.d15icriq5um5ws.amplifyapp.com"
+  aliases             = ["sm.${local.env}.itaru.uk"]
+}
+
 module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
   env    = local.env

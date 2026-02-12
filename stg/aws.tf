@@ -52,6 +52,11 @@ module "alb" {
   sg_alb_id                = module.security_group.id_alb
 }
 
+module "s3" {
+  source = "../modules/aws/s3"
+  env    = local.env
+}
+
 module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
   env    = local.env

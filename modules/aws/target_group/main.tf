@@ -30,13 +30,4 @@ resource "aws_lb_target_group" "slack_metrics_api" {
     enabled         = false
     type            = "lb_cookie"
   }
-
-  lifecycle {
-    ignore_changes = [
-      tags,
-      tags_all,
-      lambda_multi_value_headers_enabled,
-      proxy_protocol_v2,
-    ]
-  }
 }

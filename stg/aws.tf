@@ -42,6 +42,16 @@ module "ecr" {
   env    = local.env
 }
 
+module "alb" {
+  source                   = "../modules/aws/alb"
+  env                      = local.env
+  vpc_id                   = module.vpc.id
+  public_subnet_ids        = local.public_subnet_ids
+  certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
+  tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
+  sg_alb_id                = module.security_group.id_alb
+}
+
 module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
   env    = local.env

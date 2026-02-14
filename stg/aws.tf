@@ -20,8 +20,8 @@ module "rtb" {
   env                  = local.env
   vpc_id               = module.vpc.id
   gateway_id           = module.igw.id
-  public_subnet_ids    = local.public_subnet_ids
-  private_subnet_ids   = local.private_subnet_ids
+  public_subnet_ids    = module.subnet.public_subnet_ids
+  private_subnet_ids   = module.subnet.private_subnet_ids
   network_interface_id = module.ec2.network_interface_id_nat_1a
 }
 
@@ -46,7 +46,7 @@ module "alb" {
   source                   = "../modules/aws/alb"
   env                      = local.env
   vpc_id                   = module.vpc.id
-  public_subnet_ids        = local.public_subnet_ids
+  public_subnet_ids        = module.subnet.public_subnet_ids
   certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
   tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
   sg_alb_id                = module.security_group.id_alb
@@ -119,7 +119,7 @@ module "ecs" {
     capacity_provider      = "FARGATE_SPOT"
     target_group_arn       = module.target_group.arn_slack_metrics_api
     security_group_ids     = [module.security_group.id_slack_metrics_backend]
-    subnet_ids             = local.private_subnet_ids
+    subnet_ids             = module.subnet.private_subnet_ids
   }
 }
 

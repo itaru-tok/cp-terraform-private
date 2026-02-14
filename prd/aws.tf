@@ -24,3 +24,9 @@ module "rtb" {
   private_subnet_ids   = module.subnet.private_subnet_ids
   network_interface_id = null
 }
+
+module "security_group" {
+  source = "../modules/aws/security_group"
+  env    = local.env
+  vpc_id = module.vpc.id
+}

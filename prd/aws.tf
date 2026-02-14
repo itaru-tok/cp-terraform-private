@@ -30,3 +30,9 @@ module "security_group" {
   env    = local.env
   vpc_id = module.vpc.id
 }
+
+module "route53_itaru_uk" {
+  source    = "../modules/aws/route53_unit"
+  zone_name = local.base_host
+  records   = []
+}

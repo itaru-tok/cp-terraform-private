@@ -43,3 +43,8 @@ module "iam_role" {
   region     = local.region
   account_id = local.account_id
 }
+
+module "s3" {
+  source = "../modules/aws/s3"
+  env    = local.env
+}

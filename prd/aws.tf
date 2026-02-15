@@ -35,6 +35,10 @@ module "route53_itaru_uk" {
   source    = "../modules/aws/route53_unit"
   zone_name = local.base_host
   records   = []
+  ses = {
+    enable      = true
+    dkim_tokens = module.ses.dkim_tokens
+  }
 }
 
 module "iam_role" {
@@ -58,4 +62,12 @@ module "sqs" {
   source     = "../modules/aws/sqs"
   env        = local.env
   account_id = local.account_id
+}
+
+module "ses" {
+  source                 = "../modules/aws/ses"
+  env                    = local.env
+  domain                 = local.base_host
+  mail_from_domain       = local.ses_mail_from_domain
+  behavior_on_mx_failure = "USE_DEFAULT_VALUE"
 }

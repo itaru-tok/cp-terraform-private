@@ -53,3 +53,9 @@ module "ecr" {
   source = "../modules/aws/ecr"
   env    = local.env
 }
+
+module "sqs" {
+  source     = "../modules/aws/sqs"
+  env        = local.env
+  account_id = local.account_id
+}

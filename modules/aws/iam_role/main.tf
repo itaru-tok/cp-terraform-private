@@ -60,6 +60,11 @@ resource "aws_iam_role_policy_attachment" "cp_bastion" {
   policy_arn = each.value
 }
 
+resource "aws_iam_instance_profile" "cp_bastion" {
+  name = "cp-bastion-${var.env}"
+  role = aws_iam_role.cp_bastion.name
+}
+
 /************************************************************
 cp-db-migrator
 ************************************************************/
@@ -107,6 +112,11 @@ resource "aws_iam_role_policy_attachment" "cp_nat" {
 
   role       = aws_iam_role.cp_nat.name
   policy_arn = each.value
+}
+
+resource "aws_iam_instance_profile" "cp_nat" {
+  name = "cp-nat-${var.env}"
+  role = aws_iam_role.cp_nat.name
 }
 
 /************************************************************

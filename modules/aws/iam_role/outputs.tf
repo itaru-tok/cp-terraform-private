@@ -17,3 +17,11 @@ output "role_arn_cp_scheduler_slack_metrics" {
 output "role_arn_cp_scheduler_cost_cutter" {
   value = aws_iam_role.cp_scheduler_cost_cutter.arn
 }
+
+output "instance_profile_cp_bastion" {
+  value = aws_iam_instance_profile.cp_bastion.name
+}
+
+output "instance_profile_cp_nat" {
+  value = aws_iam_instance_profile.cp_nat.name
+}

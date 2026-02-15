@@ -97,3 +97,18 @@ module "acm_itaru_uk_us_east_1" {
     aws = aws.us_east_1
   }
 }
+
+module "ec2" {
+  env              = local.env
+  source           = "../modules/aws/ec2"
+  public_subnet_id = module.subnet.id_public_subnet_1a
+  bastion = {
+    ami_id               = "ami-0d48053661ff2089b" // stg環境で構築した踏み台サーバのAMI ID
+    iam_instance_profile = module.iam_role.instance_profile_cp_bastion
+    security_group_id    = module.security_group.id_bastion
+  }
+  nat_1a = {
+    iam_instance_profile = module.iam_role.instance_profile_cp_nat
+    security_group_id    = module.security_group.id_nat
+  }
+}

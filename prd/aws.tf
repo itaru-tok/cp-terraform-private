@@ -34,7 +34,12 @@ module "security_group" {
 module "route53_itaru_uk" {
   source    = "../modules/aws/route53_unit"
   zone_name = local.base_host
-  records   = []
+  records = [{
+    name   = module.acm_itaru_uk_ap_northeast_1.validation_record_name
+    values = [module.acm_itaru_uk_us_east_1.validation_record_value]
+    type   = "CNAME"
+    ttl    = "300"
+  }, ]
   ses = {
     enable      = true
     dkim_tokens = module.ses.dkim_tokens
@@ -75,4 +80,20 @@ module "ses" {
 module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
   env    = local.env
+}
+
+module "acm_itaru_uk_ap_northeast_1" {
+  source      = "../modules/aws/acm_unit"
+  domain_name = "*.${local.base_host}"
+  providers = {
+    aws = aws
+  }
+}
+
+module "acm_itaru_uk_us_east_1" {
+  source      = "../modules/aws/acm_unit"
+  domain_name = "*.${local.base_host}"
+  providers = {
+    aws = aws.us_east_1
+  }
 }

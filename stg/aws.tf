@@ -88,8 +88,10 @@ module "ses" {
 }
 
 module "iam_role" {
-  source = "../modules/aws/iam_role"
-  env    = local.env
+  source     = "../modules/aws/iam_role"
+  env        = local.env
+  region     = local.region
+  account_id = local.account_id
 }
 
 module "ec2" {

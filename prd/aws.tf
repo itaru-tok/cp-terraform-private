@@ -36,3 +36,10 @@ module "route53_itaru_uk" {
   zone_name = local.base_host
   records   = []
 }
+
+module "iam_role" {
+  source     = "../modules/aws/iam_role"
+  env        = local.env
+  region     = local.region
+  account_id = local.account_id
+}

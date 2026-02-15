@@ -16,6 +16,7 @@ variable "bastion" {
 
 variable "nat_1a" {
   type = object({
+    ami_id               = string
     iam_instance_profile = string
     security_group_id    = string
   })

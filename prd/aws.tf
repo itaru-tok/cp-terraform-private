@@ -22,7 +22,7 @@ module "rtb" {
   gateway_id           = module.igw.id
   public_subnet_ids    = module.subnet.public_subnet_ids
   private_subnet_ids   = module.subnet.private_subnet_ids
-  network_interface_id = null
+  network_interface_id = module.ec2.network_interface_id_nat_1a
 }
 
 module "security_group" {
@@ -108,6 +108,7 @@ module "ec2" {
     security_group_id    = module.security_group.id_bastion
   }
   nat_1a = {
+    ami_id               = "ami-063fed300ac346a89" // stg環境で構築したNATサーバのAMI ID
     iam_instance_profile = module.iam_role.instance_profile_cp_nat
     security_group_id    = module.security_group.id_nat
   }

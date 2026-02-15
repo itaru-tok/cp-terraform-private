@@ -1,5 +1,5 @@
 resource "aws_instance" "nat_1a" {
-  ami                         = "ami-03d1820163e6b9f5d"
+  ami                         = var.nat_1a.ami_id
   instance_type               = "t2.micro"
   subnet_id                   = var.public_subnet_id
   vpc_security_group_ids      = [var.nat_1a.security_group_id]

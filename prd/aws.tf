@@ -121,3 +121,18 @@ module "rds" {
   private_subnet_1c_id = module.subnet.id_private_subnet_1c
   db_security_group_id = module.security_group.id_db
 }
+
+module "ecs" {
+  source = "../modules/aws/ecs"
+  env    = local.env
+  // cloud-pratica-backendクラスター
+  slack_metrics_api = {
+    name                   = "slack-metrics-api-${local.env}"
+    task_definition        = ""
+    enable_execute_command = true
+    capacity_provider      = "FARGATE_SPOT"
+    target_group_arn       = ""
+    security_group_ids     = [module.security_group.id_slack_metrics_backend]
+    subnet_ids             = module.subnet.private_subnet_ids
+  }
+}

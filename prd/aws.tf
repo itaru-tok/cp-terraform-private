@@ -113,3 +113,11 @@ module "ec2" {
     security_group_id    = module.security_group.id_nat
   }
 }
+
+module "rds" {
+  source               = "../modules/aws/rds"
+  env                  = local.env
+  private_subnet_1a_id = module.subnet.id_private_subnet_1a
+  private_subnet_1c_id = module.subnet.id_private_subnet_1c
+  db_security_group_id = module.security_group.id_db
+}

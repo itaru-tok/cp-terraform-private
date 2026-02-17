@@ -104,6 +104,7 @@ module "ec2" {
     security_group_id    = module.security_group.id_bastion
   }
   nat_1a = {
+    # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
     ami_id               = "ami-063fed300ac346a89"
     iam_instance_profile = module.iam_role.instance_profile_cp_nat
     security_group_id    = module.security_group.id_nat

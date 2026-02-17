@@ -108,6 +108,7 @@ module "ec2" {
     security_group_id    = module.security_group.id_bastion
   }
   nat_1a = {
+    # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
     ami_id               = "ami-063fed300ac346a89" // stg環境で構築したNATサーバのAMI ID
     iam_instance_profile = module.iam_role.instance_profile_cp_nat
     security_group_id    = module.security_group.id_nat
@@ -142,8 +143,8 @@ module "ecs_task_definition" {
 
   env = local.env
 
-  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:f7f0df5" # CI/CD update target
-  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:f7f0df5"   # CI/CD update target
+  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:361434e" # CI/CD update target
+  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:361434e"   # CI/CD update target
 
   ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
   ecs_task_role_arn_slack_metrics = module.iam_role.role_arn_cp_slack_metrics_backend

@@ -54,6 +54,8 @@ resource "aws_security_group" "db" {
 
 # --- Inbound Rules ---
 
+# TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にstg/prdのコンソールから直接設定済み）
+
 resource "aws_vpc_security_group_ingress_rule" "db" {
   for_each = {
     bastion               = aws_security_group.bastion.id

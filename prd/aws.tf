@@ -136,3 +136,34 @@ module "ecs" {
     subnet_ids             = module.subnet.private_subnet_ids
   }
 }
+
+module "ecs_task_definition" {
+  source = "../modules/aws/ecs_task_definition"
+
+  env = local.env
+
+  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:f7f0df5" # CI/CD update target
+  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:f7f0df5"   # CI/CD update target
+
+  ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
+  ecs_task_role_arn_slack_metrics = module.iam_role.role_arn_cp_slack_metrics_backend
+  ecs_task_role_arn_db_migrator   = module.iam_role.role_arn_cp_db_migrator
+
+  secrets_manager_arn_db_main_instance = module.secrets_manager.arn_db_main_instance
+  arn_cp_config_bucket                 = module.s3.s3_bucket_arn_cp_config
+
+  ecs_task_specs = {
+    slack_metrics_api = {
+      cpu    = 256
+      memory = 512
+    }
+    slack_metrics_batch = {
+      cpu    = 256
+      memory = 512
+    }
+    db_migrator = {
+      cpu    = 256
+      memory = 512
+    }
+  }
+}

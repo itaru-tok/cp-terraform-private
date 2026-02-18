@@ -31,26 +31,26 @@ module "security_group" {
   vpc_id = module.vpc.id
 }
 
-module "route53_itaru_uk" {
-  source    = "../modules/aws/route53_unit"
-  zone_name = local.base_host
-  records = [{
-    name   = module.acm_itaru_uk_ap_northeast_1.validation_record_name
-    values = [module.acm_itaru_uk_us_east_1.validation_record_value]
-    type   = "CNAME"
-    ttl    = "300"
-  }, ]
-  ses = {
-    enable      = true
-    dkim_tokens = module.ses.dkim_tokens
-  }
+module "target_group" {
+  source = "../modules/aws/target_group"
+  env    = local.env
+  vpc_id = module.vpc.id
 }
 
-module "iam_role" {
-  source     = "../modules/aws/iam_role"
-  env        = local.env
-  region     = local.region
-  account_id = local.account_id
+module "ecr" {
+  source = "../modules/aws/ecr"
+  env    = local.env
+}
+
+# TODO: ALBのSGのinbound ruleをTerraformで管理
+module "alb" {
+  source                   = "../modules/aws/alb"
+  env                      = local.env
+  vpc_id                   = module.vpc.id
+  public_subnet_ids        = module.subnet.public_subnet_ids
+  certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
+  tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
+  sg_alb_id                = module.security_group.id_alb
 }
 
 module "s3" {
@@ -58,8 +58,19 @@ module "s3" {
   env    = local.env
 }
 
-module "ecr" {
-  source = "../modules/aws/ecr"
+
+
+
+
+
+
+
+
+
+
+
+module "secrets_manager" {
+  source = "../modules/aws/secrets_manager"
   env    = local.env
 }
 
@@ -77,25 +88,11 @@ module "ses" {
   behavior_on_mx_failure = "USE_DEFAULT_VALUE"
 }
 
-module "secrets_manager" {
-  source = "../modules/aws/secrets_manager"
-  env    = local.env
-}
-
-module "acm_itaru_uk_ap_northeast_1" {
-  source      = "../modules/aws/acm_unit"
-  domain_name = "*.${local.base_host}"
-  providers = {
-    aws = aws
-  }
-}
-
-module "acm_itaru_uk_us_east_1" {
-  source      = "../modules/aws/acm_unit"
-  domain_name = "*.${local.base_host}"
-  providers = {
-    aws = aws.us_east_1
-  }
+module "iam_role" {
+  source     = "../modules/aws/iam_role"
+  env        = local.env
+  region     = local.region
+  account_id = local.account_id
 }
 
 module "ec2" {
@@ -168,3 +165,58 @@ module "ecs_task_definition" {
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module "acm_itaru_uk_ap_northeast_1" {
+  source      = "../modules/aws/acm_unit"
+  domain_name = "*.${local.base_host}"
+  providers = {
+    aws = aws
+  }
+}
+
+module "acm_itaru_uk_us_east_1" {
+  source      = "../modules/aws/acm_unit"
+  domain_name = "*.${local.base_host}"
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
+module "route53_itaru_uk" {
+  source    = "../modules/aws/route53_unit"
+  zone_name = local.base_host
+  records = [{
+    name   = module.acm_itaru_uk_ap_northeast_1.validation_record_name
+    values = [module.acm_itaru_uk_us_east_1.validation_record_value]
+    type   = "CNAME"
+    ttl    = "300"
+  }, ]
+  ses = {
+    enable      = true
+    dkim_tokens = module.ses.dkim_tokens
+  }
+}
+
+
+
+

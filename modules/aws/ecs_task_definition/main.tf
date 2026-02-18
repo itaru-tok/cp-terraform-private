@@ -53,11 +53,11 @@ resource "aws_ecs_task_definition" "slack_metrics_api" {
         },
         {
           name      = "POSTGRES_MAIN_PASSWORD"
-          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_user::"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_password::"
         },
         {
           name      = "POSTGRES_MAIN_USER"
-          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_password::"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_user::"
         }
       ]
     }

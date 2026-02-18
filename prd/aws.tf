@@ -126,10 +126,10 @@ module "ecs" {
   // cloud-pratica-backendクラスター
   slack_metrics_api = {
     name                   = "slack-metrics-api-${local.env}"
-    task_definition        = ""
+    task_definition        = module.ecs_task_definition.arn_slack_metrics_api
     enable_execute_command = true
     capacity_provider      = "FARGATE_SPOT"
-    target_group_arn       = ""
+    target_group_arn       = module.target_group.arn_slack_metrics_api
     security_group_ids     = [module.security_group.id_slack_metrics_backend]
     subnet_ids             = module.subnet.private_subnet_ids
   }

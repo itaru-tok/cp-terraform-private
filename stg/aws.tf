@@ -140,8 +140,8 @@ module "ecs_task_definition" {
 
   env = local.env
 
-  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:f7f0df5" # CI/CD update target
-  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:f7f0df5"   # CI/CD update target
+  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:361434e" # CI/CD update target
+  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
 
   ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
   ecs_task_role_arn_slack_metrics = module.iam_role.role_arn_cp_slack_metrics_backend

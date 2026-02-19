@@ -56,6 +56,9 @@ module "alb" {
 module "s3" {
   source = "../modules/aws/s3"
   env    = local.env
+  slack_metrics = {
+    cloudfront_distribution_arn = module.cloudfront.distribution_arn
+  }
 }
 
 module "cloudfront" {

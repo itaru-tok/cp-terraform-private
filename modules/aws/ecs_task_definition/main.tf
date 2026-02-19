@@ -60,6 +60,56 @@ resource "aws_ecs_task_definition" "slack_metrics_api" {
           valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_user::"
         }
       ]
+      readonlyRootFilesystem = true
+    },
+    {
+      name      = "worker"
+      image     = var.ecr_url_slack_metrics
+      essential = true
+      environment = [
+        {
+          name  = "MODE"
+          value = "sqs"
+        }
+      ]
+      environmentFiles = [
+        {
+          type  = "s3"
+          value = "${var.arn_cp_config_bucket}/slack-metrics-${var.env}.env"
+        }
+      ]
+      healthCheck = {
+        command     = ["CMD-SHELL", "ps aux | grep main | grep -v grep || exit 1"]
+        interval    = 10
+        timeout     = 5
+        retries     = 3
+        startPeriod = 0
+      }
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/slack-metrics-worker-${var.env}"
+          "awslogs-region"        = "ap-northeast-1"
+          "awslogs-stream-prefix" = "ecs"
+          "awslogs-create-group"  = "true"
+        }
+      }
+      secrets = [
+        {
+          name      = "POSTGRES_MAIN_HOST"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:host::"
+        },
+        {
+          name      = "POSTGRES_MAIN_PASSWORD"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_password::"
+        },
+        {
+          name      = "POSTGRES_MAIN_USER"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_user::"
+        }
+      ]
+      stopTimeout            = 120
+      readonlyRootFilesystem = true
     }
   ])
 

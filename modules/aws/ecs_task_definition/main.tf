@@ -132,13 +132,34 @@ resource "aws_ecs_task_definition" "slack_metrics_batch" {
 
   container_definitions = jsonencode([
     {
-      name      = "app"
-      image     = var.ecr_url_slack_metrics
-      essential = true
+      name         = "batch"
+      image        = var.ecr_url_slack_metrics
+      essential    = true
+      portMappings = []
+      secrets = [
+        {
+          name      = "POSTGRES_MAIN_HOST"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:host::"
+        },
+        {
+          name      = "POSTGRES_MAIN_USER"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_user::"
+        },
+        {
+          name      = "POSTGRES_MAIN_PASSWORD"
+          valueFrom = "${var.secrets_manager_arn_db_main_instance}:operator_password::"
+        },
+      ]
       environment = [
         {
           name  = "MODE"
           value = "batch"
+        }
+      ]
+      environmentFiles = [
+        {
+          type  = "s3"
+          value = "${var.arn_cp_config_bucket}/slack-metrics-${var.env}.env"
         }
       ]
       logConfiguration = {

@@ -177,7 +177,7 @@ module "event_bridge_scheduler" {
   slack_metrics = {
     iam_role_arn                             = module.iam_role.role_arn_cp_scheduler_slack_metrics
     ecs_cluster_arn                          = module.ecs.ecs_cluster_arn_cloud_pratica_backend
-    ecs_task_definition_arn_without_revision = module.ecs_task_definition.arn_without_revision_slack_metrics_api
+    ecs_task_definition_arn_without_revision = module.ecs_task_definition.arn_without_revision_slack_metrics_batch
     security_group_id                        = module.security_group.id_slack_metrics_backend
   }
 

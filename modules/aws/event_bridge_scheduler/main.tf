@@ -44,6 +44,10 @@ resource "aws_scheduler_schedule" "sync_workspaces" {
             {
               name  = "TYPE"
               value = "sync-workspaces"
+            },
+            {
+              name  = "MODE"
+              value = "batch"
             }
           ]
         }

@@ -69,6 +69,13 @@ resource "aws_vpc_security_group_ingress_rule" "db" {
   to_port                      = 5432
   ip_protocol                  = "tcp"
 }
+resource "aws_vpc_security_group_ingress_rule" "slack_metrics_backend" {
+  security_group_id            = aws_security_group.slack_metrics_backend.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 8080
+  to_port                      = 8080
+  ip_protocol                  = "tcp"
+}
 
 # --- Outbound Rules ---
 

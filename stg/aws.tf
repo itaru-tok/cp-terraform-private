@@ -45,6 +45,7 @@ module "ecr" {
 module "alb" {
   source                   = "../modules/aws/alb"
   env                      = local.env
+  base_host                = local.base_host
   vpc_id                   = module.vpc.id
   public_subnet_ids        = module.subnet.public_subnet_ids
   certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn

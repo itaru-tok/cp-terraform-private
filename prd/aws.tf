@@ -46,6 +46,7 @@ module "ecr" {
 module "alb" {
   source                   = "../modules/aws/alb"
   env                      = local.env
+  base_host                = local.base_host
   vpc_id                   = module.vpc.id
   public_subnet_ids        = module.subnet.public_subnet_ids
   certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
@@ -205,12 +206,23 @@ module "acm_itaru_uk_us_east_1" {
 module "route53_itaru_uk" {
   source    = "../modules/aws/route53_unit"
   zone_name = local.base_host
-  records = [{
-    name   = module.acm_itaru_uk_ap_northeast_1.validation_record_name
-    values = [module.acm_itaru_uk_us_east_1.validation_record_value]
-    type   = "CNAME"
-    ttl    = "300"
-  }, ]
+  records = [
+    {
+      name = "sm-api.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = module.alb.dns_name
+        zone_id                = module.alb.zone_id_ap_northeast_1
+        evaluate_target_health = true
+      }
+    },
+    {
+      name   = module.acm_itaru_uk_ap_northeast_1.validation_record_name
+      values = [module.acm_itaru_uk_us_east_1.validation_record_value]
+      type   = "CNAME"
+      ttl    = "300"
+    },
+  ]
   ses = {
     enable      = true
     dkim_tokens = module.ses.dkim_tokens

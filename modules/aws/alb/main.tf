@@ -36,7 +36,7 @@ resource "aws_lb_listener_rule" "slack_metrics_api" {
 
   condition {
     host_header {
-      values = ["sm-api.${var.env}.itaru.uk"]
+      values = ["sm-api.${var.base_host}"]
     }
   }
 }

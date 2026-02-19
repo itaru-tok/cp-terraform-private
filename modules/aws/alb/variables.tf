@@ -21,3 +21,7 @@ variable "tg_slack_metrics_api_arn" {
 variable "sg_alb_id" {
   type = string
 }
+
+variable "base_host" {
+  type = string
+}

@@ -219,6 +219,15 @@ module "route53_itaru_uk" {
       }
     },
     {
+      name = "sm.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = "${module.cloudfront.domain_name}."
+        zone_id                = module.cloudfront.zone_id_us_east_1
+        evaluate_target_health = false
+      }
+    },
+    {
       name   = module.acm_itaru_uk_ap_northeast_1.validation_record_name
       values = [module.acm_itaru_uk_us_east_1.validation_record_value]
       type   = "CNAME"

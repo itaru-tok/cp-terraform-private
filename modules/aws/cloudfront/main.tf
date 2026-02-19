@@ -1,4 +1,8 @@
 locals {
+  s3_origin_id      = "s3-slack-metrics-${var.env}"
+  s3_domain_name    = "cp-slack-metrics-itaru-${var.env}.s3.ap-northeast-1.amazonaws.com"
+  amplify_origin_id = "amplify-slack-metrics-${var.env}"
+
   // MEMO: AWSで設定されるグローバルな固定値
   cache_policy_id = {
     caching_optimized = "658327ea-f89d-4fab-a63d-7e88639e58f6"
@@ -24,8 +28,8 @@ resource "aws_cloudfront_distribution" "slack_metrics" {
   aliases         = var.aliases
 
   origin {
-    domain_name = var.amplify_domain_name
-    origin_id   = var.amplify_origin_id
+    domain_name = var.amplify_domain_name_slack_metrics
+    origin_id   = local.amplify_origin_id
 
     custom_origin_config {
       http_port              = 80
@@ -36,15 +40,15 @@ resource "aws_cloudfront_distribution" "slack_metrics" {
   }
 
   origin {
-    domain_name              = var.s3_domain_name
+    domain_name              = local.s3_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.s3_slack_metrics.id
-    origin_id                = var.s3_origin_id
+    origin_id                = local.s3_origin_id
   }
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = var.amplify_origin_id
+    target_origin_id = local.amplify_origin_id
 
     viewer_protocol_policy   = "https-only"
     cache_policy_id          = local.cache_policy_id.caching_disabled
@@ -56,7 +60,7 @@ resource "aws_cloudfront_distribution" "slack_metrics" {
     path_pattern     = "/static/*"
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = var.s3_origin_id
+    target_origin_id = local.s3_origin_id
 
     viewer_protocol_policy = "https-only"
     cache_policy_id        = local.cache_policy_id.caching_optimized

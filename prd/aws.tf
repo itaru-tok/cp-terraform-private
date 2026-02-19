@@ -59,16 +59,13 @@ module "s3" {
   env    = local.env
 }
 
-
-
-
-
-
-
-
-
-
-
+module "cloudfront" {
+  source                            = "../modules/aws/cloudfront"
+  env                               = local.env
+  certificate_arn                   = module.acm_itaru_uk_us_east_1.arn
+  amplify_domain_name_slack_metrics = local.amplify_domain_name_slack_metrics
+  aliases                           = ["sm.${local.base_host}"]
+}
 
 module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
@@ -189,26 +186,6 @@ module "event_bridge_scheduler" {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 module "acm_itaru_uk_ap_northeast_1" {
   source      = "../modules/aws/acm_unit"
   domain_name = "*.${local.base_host}"
@@ -250,7 +227,3 @@ module "route53_itaru_uk" {
     dkim_tokens = module.ses.dkim_tokens
   }
 }
-
-
-
-

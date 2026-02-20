@@ -6,19 +6,8 @@ variable "certificate_arn" {
   type = string
 }
 
-variable "s3_origin_id" {
-  type = string
-}
 
-variable "s3_domain_name" {
-  type = string
-}
-
-variable "amplify_origin_id" {
-  type = string
-}
-
-variable "amplify_domain_name" {
+variable "amplify_domain_name_slack_metrics" {
   type = string
 }
 

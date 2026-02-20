@@ -54,6 +54,8 @@ resource "aws_security_group" "db" {
 
 # --- Inbound Rules ---
 
+# TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にstg/prdのコンソールから直接設定済み）
+
 resource "aws_vpc_security_group_ingress_rule" "db" {
   for_each = {
     bastion               = aws_security_group.bastion.id
@@ -65,6 +67,13 @@ resource "aws_vpc_security_group_ingress_rule" "db" {
   referenced_security_group_id = each.value
   from_port                    = 5432
   to_port                      = 5432
+  ip_protocol                  = "tcp"
+}
+resource "aws_vpc_security_group_ingress_rule" "slack_metrics_backend" {
+  security_group_id            = aws_security_group.slack_metrics_backend.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 8080
+  to_port                      = 8080
   ip_protocol                  = "tcp"
 }
 

@@ -37,4 +37,3 @@ resource "aws_subnet" "private_1a" {
     Name = "private-subnet-1a-${var.env}"
   }
 }
-

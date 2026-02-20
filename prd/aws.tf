@@ -42,6 +42,7 @@ module "ecr" {
   env    = local.env
 }
 
+# TODO: ALBのSGのinbound ruleをTerraformで管理
 module "alb" {
   source                   = "../modules/aws/alb"
   env                      = local.env
@@ -96,17 +97,17 @@ module "iam_role" {
 }
 
 module "ec2" {
-  source           = "../modules/aws/ec2"
   env              = local.env
+  source           = "../modules/aws/ec2"
   public_subnet_id = module.subnet.id_public_subnet_1a
   bastion = {
-    ami_id               = "ami-0d48053661ff2089b"
+    ami_id               = "ami-0d48053661ff2089b" // stg環境で構築した踏み台サーバのAMI ID
     iam_instance_profile = module.iam_role.instance_profile_cp_bastion
     security_group_id    = module.security_group.id_bastion
   }
   nat_1a = {
     # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
-    ami_id               = "ami-063fed300ac346a89"
+    ami_id               = "ami-063fed300ac346a89" // stg環境で構築したNATサーバのAMI ID
     iam_instance_profile = module.iam_role.instance_profile_cp_nat
     security_group_id    = module.security_group.id_nat
   }
@@ -123,7 +124,7 @@ module "rds" {
 module "ecs" {
   source = "../modules/aws/ecs"
   env    = local.env
-
+  // cloud-pratica-backendクラスター
   slack_metrics_api = {
     name                   = "slack-metrics-api-${local.env}"
     task_definition        = module.ecs_task_definition.arn_slack_metrics_api
@@ -141,7 +142,7 @@ module "ecs_task_definition" {
   env = local.env
 
   ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:361434e" # CI/CD update target
-  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
+  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:361434e"   # CI/CD update target
 
   ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
   ecs_task_role_arn_slack_metrics = module.iam_role.role_arn_cp_slack_metrics_backend
@@ -167,9 +168,11 @@ module "ecs_task_definition" {
 }
 
 module "event_bridge_scheduler" {
-  source             = "../modules/aws/event_bridge_scheduler"
-  env                = local.env
-  private_subnet_ids = [module.subnet.id_private_subnet_1a]
+  source = "../modules/aws/event_bridge_scheduler"
+
+  env = local.env
+
+  private_subnet_ids = module.subnet.private_subnet_ids
 
   slack_metrics = {
     iam_role_arn                             = module.iam_role.role_arn_cp_scheduler_slack_metrics
@@ -205,7 +208,6 @@ module "acm_itaru_uk_us_east_1" {
 module "route53_itaru_uk" {
   source    = "../modules/aws/route53_unit"
   zone_name = local.base_host
-
   records = [
     {
       name = "sm-api.${local.base_host}"
@@ -226,13 +228,12 @@ module "route53_itaru_uk" {
       }
     },
     {
-      name   = trimsuffix(tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_name, ".")
+      name   = module.acm_itaru_uk_ap_northeast_1.validation_record_name
+      values = [module.acm_itaru_uk_us_east_1.validation_record_value]
       type   = "CNAME"
-      values = [tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_value]
-      ttl    = 300
-    }
+      ttl    = "300"
+    },
   ]
-
   ses = {
     enable      = true
     dkim_tokens = module.ses.dkim_tokens

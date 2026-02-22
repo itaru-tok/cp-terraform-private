@@ -239,8 +239,6 @@ module "route53_itaru_uk" {
   }
 }
 
-# --- SSM Parameters for Ecspresso ---
-
 module "ssm_parameter" {
   source                      = "../modules/aws/ssm_parameter"
   env                         = local.env

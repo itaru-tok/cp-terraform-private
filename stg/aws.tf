@@ -238,3 +238,19 @@ module "route53_itaru_uk" {
     dkim_tokens = module.ses.dkim_tokens
   }
 }
+
+# --- SSM Parameters for Ecspresso ---
+
+module "ssm_parameter" {
+  source                      = "../modules/aws/ssm_parameter"
+  env                         = local.env
+  image_tag_slack_metrics     = "361434e"
+  image_tag_db_migrator       = "c5291c1"
+  private_subnet_id_1a        = module.subnet.id_private_subnet_1a
+  private_subnet_id_1c        = module.subnet.id_private_subnet_1c
+  s3_arn_cp_config            = module.s3.s3_bucket_arn_cp_config
+  aws_account_id              = local.account_id
+  sg_id_slack_metrics_backend = module.security_group.id_slack_metrics_backend
+  sg_id_db_migrator           = module.security_group.id_db_migrator
+  tg_arn_slack_metrics_api    = module.target_group.arn_slack_metrics_api
+}

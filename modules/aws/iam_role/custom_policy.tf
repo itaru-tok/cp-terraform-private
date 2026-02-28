@@ -137,3 +137,48 @@ resource "aws_iam_policy" "ec2_start_stop" {
     ]
   })
 }
+
+/************************************************************
+GitHub Actions
+************************************************************/
+resource "aws_iam_policy" "github_actions" {
+  name = "github-actions-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:PutImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload"
+        ]
+        Resource = [
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-${var.env}",
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/db-migrator-${var.env}"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:PutParameter"
+        ]
+        Resource = [
+          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/image-tag-slack-metrics-${var.env}",
+          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/image-tag-db-migrator-${var.env}"
+        ]
+      }
+    ]
+  })
+}

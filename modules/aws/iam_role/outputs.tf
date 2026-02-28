@@ -25,3 +25,7 @@ output "instance_profile_cp_bastion" {
 output "instance_profile_cp_nat" {
   value = aws_iam_instance_profile.cp_nat.name
 }
+
+output "role_arn_github_actions_oidc" {
+  value = aws_iam_role.github_actions_oidc.arn
+}

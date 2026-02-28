@@ -269,3 +269,40 @@ resource "aws_iam_role_policy_attachment" "administrator" {
   role       = aws_iam_role.administrator.name
   policy_arn = each.value
 }
+
+/************************************************************
+github-actions-oidc
+************************************************************/
+resource "aws_iam_role" "github_actions_oidc" {
+  name = "github-actions-oidc-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = "arn:aws:iam::${var.account_id}:oidc-provider/token.actions.githubusercontent.com"
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:itaru-tok/cloud-pratica-backend-fork:*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_oidc" {
+  for_each = {
+    github_actions = aws_iam_policy.github_actions.arn
+  }
+
+  role       = aws_iam_role.github_actions_oidc.name
+  policy_arn = each.value
+}

@@ -198,7 +198,15 @@ resource "aws_iam_policy" "github_actions" {
           "ecs:DescribeTaskDefinition",
           "ecs:RegisterTaskDefinition",
           "ecs:UpdateService",
-          "ecs:DescribeServices"
+          "ecs:DescribeServices",
+          "ecs:TagResource"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "application-autoscaling:DescribeScalableTargets"
         ]
         Resource = "*"
       },

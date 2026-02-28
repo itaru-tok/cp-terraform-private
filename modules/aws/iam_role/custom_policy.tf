@@ -172,12 +172,37 @@ resource "aws_iam_policy" "github_actions" {
       {
         Effect = "Allow"
         Action = [
-          "ssm:PutParameter"
+          "ssm:PutParameter",
+          "ssm:GetParameter",
+          "ssm:GetParameters"
         ]
         Resource = [
           "arn:aws:ssm:${var.region}:${var.account_id}:parameter/image-tag-slack-metrics-${var.env}",
-          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/image-tag-db-migrator-${var.env}"
+          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/image-tag-db-migrator-${var.env}",
+          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/ecspresso-${var.env}/*"
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:RunTask",
+          "ecs:DescribeTasks",
+          "ecs:DescribeTaskDefinition",
+          "ecs:RegisterTaskDefinition"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = "ecs-tasks.amazonaws.com"
+          }
+        }
       }
     ]
   })

@@ -196,7 +196,9 @@ resource "aws_iam_policy" "github_actions" {
           "ecs:RunTask",
           "ecs:DescribeTasks",
           "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition"
+          "ecs:RegisterTaskDefinition",
+          "ecs:UpdateService",
+          "ecs:DescribeServices"
         ]
         Resource = "*"
       },

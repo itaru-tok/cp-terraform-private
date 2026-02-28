@@ -15,15 +15,15 @@ module "igw" {
   vpc_id = module.vpc.id
 }
 
-module "rtb" {
-  source               = "../modules/aws/route_table"
-  env                  = local.env
-  vpc_id               = module.vpc.id
-  gateway_id           = module.igw.id
-  public_subnet_ids    = module.subnet.public_subnet_ids
-  private_subnet_ids   = module.subnet.private_subnet_ids
-  network_interface_id = module.ec2.network_interface_id_nat_1a
-}
+# module "rtb" {
+#   source             = "../modules/aws/route_table"
+#   env                = local.env
+#   vpc_id             = module.vpc.id
+#   gateway_id         = module.igw.id
+#   public_subnet_ids  = module.subnet.public_subnet_ids
+#   private_subnet_ids = module.subnet.private_subnet_ids
+#   #   network_interface_id = module.ec2.network_interface_id_nat_1a
+# }
 
 module "security_group" {
   source = "../modules/aws/security_group"
@@ -43,16 +43,16 @@ module "ecr" {
 }
 
 # TODO: ALBのSGのinbound ruleをTerraformで管理
-module "alb" {
-  source                   = "../modules/aws/alb"
-  env                      = local.env
-  base_host                = local.base_host
-  vpc_id                   = module.vpc.id
-  public_subnet_ids        = module.subnet.public_subnet_ids
-  certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
-  tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
-  sg_alb_id                = module.security_group.id_alb
-}
+# module "alb" {
+#   source                   = "../modules/aws/alb"
+#   env                      = local.env
+#   base_host                = local.base_host
+#   vpc_id                   = module.vpc.id
+#   public_subnet_ids        = module.subnet.public_subnet_ids
+#   certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
+#   tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
+#   sg_alb_id                = module.security_group.id_alb
+# }
 
 module "s3" {
   source = "../modules/aws/s3"
@@ -96,22 +96,22 @@ module "iam_role" {
   account_id = local.account_id
 }
 
-module "ec2" {
-  env              = local.env
-  source           = "../modules/aws/ec2"
-  public_subnet_id = module.subnet.id_public_subnet_1a
-  bastion = {
-    ami_id               = "ami-0d48053661ff2089b" // stg環境で構築した踏み台サーバのAMI ID
-    iam_instance_profile = module.iam_role.instance_profile_cp_bastion
-    security_group_id    = module.security_group.id_bastion
-  }
-  nat_1a = {
-    # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
-    ami_id               = "ami-063fed300ac346a89" // stg環境で構築したNATサーバのAMI ID
-    iam_instance_profile = module.iam_role.instance_profile_cp_nat
-    security_group_id    = module.security_group.id_nat
-  }
-}
+# module "ec2" {
+#   env              = local.env
+#   source           = "../modules/aws/ec2"
+#   public_subnet_id = module.subnet.id_public_subnet_1a
+#   bastion = {
+#     ami_id               = "ami-0d48053661ff2089b" // stg環境で構築した踏み台サーバのAMI ID
+#     iam_instance_profile = module.iam_role.instance_profile_cp_bastion
+#     security_group_id    = module.security_group.id_bastion
+#   }
+#   nat_1a = {
+#     # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
+#     ami_id               = "ami-063fed300ac346a89" // stg環境で構築したNATサーバのAMI ID
+#     iam_instance_profile = module.iam_role.instance_profile_cp_nat
+#     security_group_id    = module.security_group.id_nat
+#   }
+# }
 
 module "rds" {
   source               = "../modules/aws/rds"
@@ -182,9 +182,12 @@ module "event_bridge_scheduler" {
   }
 
   cost_cutter = {
-    enable                                = true
-    iam_role_arn                          = module.iam_role.role_arn_cp_scheduler_cost_cutter
-    ec2_instance_ids                      = [module.ec2.id_nat_1a, module.ec2.id_bastion]
+    enable       = true
+    iam_role_arn = module.iam_role.role_arn_cp_scheduler_cost_cutter
+    ec2_instance_ids = [
+      #      module.ec2.id_nat_1a,
+      #      module.ec2.id_bastion
+    ]
     ecs_cluster_arn_cloud_pratica_backend = module.ecs.ecs_cluster_arn_cloud_pratica_backend
   }
 }
@@ -209,15 +212,15 @@ module "route53_itaru_uk" {
   source    = "../modules/aws/route53_unit"
   zone_name = local.base_host
   records = [
-    {
-      name = "sm-api.${local.base_host}"
-      type = "A"
-      alias = {
-        name                   = module.alb.dns_name
-        zone_id                = module.alb.zone_id_ap_northeast_1
-        evaluate_target_health = true
-      }
-    },
+    #     {
+    #       name = "sm-api.${local.base_host}"
+    #       type = "A"
+    #       alias = {
+    #         name                   = module.alb.dns_name
+    #         zone_id                = module.alb.zone_id_ap_northeast_1
+    #         evaluate_target_health = true
+    #       }
+    #     },
     {
       name = "sm.${local.base_host}"
       type = "A"

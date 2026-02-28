@@ -187,7 +187,8 @@ resource "aws_iam_policy" "github_actions" {
         Resource = [
           "arn:aws:ssm:${var.region}:${var.account_id}:parameter/image-tag-slack-metrics-${var.env}",
           "arn:aws:ssm:${var.region}:${var.account_id}:parameter/image-tag-db-migrator-${var.env}",
-          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/ecspresso-${var.env}/*"
+          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/ecspresso-${var.env}/*",
+          "arn:aws:ssm:${var.region}:${var.account_id}:parameter/slack-${var.env}/*"
         ]
       },
       {

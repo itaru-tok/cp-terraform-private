@@ -8,3 +8,12 @@ module "slack_metrics_backend" {
     "roles/iam.serviceAccountUser"
   ]
 }
+
+module "db_migrator" {
+  source     = "../service_account_unit"
+  project    = var.project
+  account_id = "db-migrator-${var.env}"
+  roles = [
+    "roles/secretmanager.secretAccessor",
+  ]
+}

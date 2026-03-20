@@ -91,3 +91,26 @@ resource "google_cloud_run_v2_job" "db_migrator" {
     ]
   }
 }
+
+resource "google_cloud_run_v2_job" "slack_metrics_batch" {
+  name     = "slack-metrics-batch-${var.env}"
+  location = "asia-northeast1"
+  project  = var.project
+  template {
+    template {
+      containers {
+        image = "placeholder"
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template,
+      annotations,
+      labels,
+      client,
+      client_version,
+    ]
+  }
+}

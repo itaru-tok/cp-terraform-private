@@ -40,3 +40,9 @@ module "cloud_run" {
   project = local.project
   env     = local.env
 }
+
+module "cloud_scheduler" {
+  source  = "../modules/gcp/cloud_scheduler"
+  project = local.project
+  env     = local.env
+}

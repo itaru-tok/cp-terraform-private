@@ -17,3 +17,13 @@ module "db_migrator" {
     "roles/secretmanager.secretAccessor",
   ]
 }
+
+module "cloud_scheduler" {
+  source     = "../service_account_unit"
+  project    = var.project
+  account_id = "cloud-scheduler-${var.env}"
+  roles = [
+    "roles/run.jobsExecutorWithOverrides"
+  ]
+}
+

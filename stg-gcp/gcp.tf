@@ -46,3 +46,9 @@ module "cloud_scheduler" {
   project = local.project
   env     = local.env
 }
+
+module "cloud_tasks" {
+  source  = "../modules/gcp/cloud_tasks"
+  project = local.project
+  env     = local.env
+}

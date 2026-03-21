@@ -27,3 +27,12 @@ module "cloud_scheduler" {
   ]
 }
 
+module "cloud_tasks" {
+  source     = "../service_account_unit"
+  project    = var.project
+  account_id = "cloud-tasks-${var.env}"
+  roles = [
+    "roles/run.invoker",
+  ]
+}
+

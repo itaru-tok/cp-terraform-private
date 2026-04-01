@@ -95,6 +95,18 @@ module "iam_role" {
   account_id = local.account_id
 }
 
+module "eks_pod_identity" {
+  source       = "../modules/aws/eks_pod_identity_unit"
+  cluster_name = local.eks_cluster_name
+  associations = [
+    {
+      namespace       = "external-secrets"
+      service_account = "external-secrets-operator-sa"
+      role_arn        = module.iam_role.role_arn_cp_k8s_eso
+    },
+  ]
+}
+
 module "ec2" {
   source           = "../modules/aws/ec2"
   env              = local.env
@@ -182,8 +194,8 @@ module "event_bridge_scheduler" {
     enable       = true
     iam_role_arn = module.iam_role.role_arn_cp_scheduler_cost_cutter
     ec2_instance_ids = [
-           module.ec2.id_nat_1a,
-           module.ec2.id_bastion
+      module.ec2.id_nat_1a,
+      module.ec2.id_bastion
     ]
     ecs_cluster_arn_cloud_pratica_backend = module.ecs.ecs_cluster_arn_cloud_pratica_backend
   }
@@ -210,15 +222,15 @@ module "route53_itaru_uk" {
   zone_name = local.base_host
 
   records = [
-        {
-          name = "sm-api.${local.base_host}"
-          type = "A"
-          alias = {
-            name                   = module.alb.dns_name
-            zone_id                = module.alb.zone_id_ap_northeast_1
-            evaluate_target_health = true
-          }
-        },
+    {
+      name = "sm-api.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = module.alb.dns_name
+        zone_id                = module.alb.zone_id_ap_northeast_1
+        evaluate_target_health = true
+      }
+    },
     {
       name = "sm.${local.base_host}"
       type = "A"

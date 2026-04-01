@@ -152,6 +152,34 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
 }
 
 /************************************************************
+cp-k8s-eso (External Secrets Operator / EKS Pod Identity)
+************************************************************/
+resource "aws_iam_role" "cp_k8s_eso" {
+  name = "cp-k8s-eso-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_k8s_eso" {
+  role       = aws_iam_role.cp_k8s_eso.name
+  policy_arn = aws_iam_policy.secrets_manager_read.arn
+}
+
+/************************************************************
 cp-slack-metrics-client
 ************************************************************/
 resource "aws_iam_role" "cp_slack_metrics_client" {

@@ -29,3 +29,7 @@ output "instance_profile_cp_nat" {
 output "role_arn_github_actions_oidc" {
   value = aws_iam_role.github_actions_oidc.arn
 }
+
+output "role_arn_cp_k8s_eso" {
+  value = aws_iam_role.cp_k8s_eso.arn
+}

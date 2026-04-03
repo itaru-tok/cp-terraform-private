@@ -80,7 +80,17 @@ resource "aws_iam_role" "cp_db_migrator" {
           Service = "ecs-tasks.amazonaws.com"
         }
         Action = "sts:AssumeRole"
-      }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+      },
     ]
   })
 }

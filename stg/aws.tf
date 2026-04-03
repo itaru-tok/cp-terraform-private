@@ -25,10 +25,24 @@ module "rtb" {
   network_interface_id = module.ec2.network_interface_id_nat_1a
 }
 
+module "eks" {
+  source = "../modules/aws/eks"
+  env    = local.env
+}
+
 module "security_group" {
   source = "../modules/aws/security_group"
   env    = local.env
   vpc_id = module.vpc.id
+}
+
+# EKS クラスター SG → RDS（cp-db）: モジュール外で定義すると Terraform LS が「想定外の属性」と誤検知しない
+resource "aws_vpc_security_group_ingress_rule" "db_from_eks_cluster" {
+  security_group_id            = module.security_group.id_db
+  referenced_security_group_id = module.eks.cp_cluster_security_group_id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
 }
 
 module "target_group" {
@@ -103,6 +117,11 @@ module "eks_pod_identity" {
       namespace       = "external-secrets"
       service_account = "external-secrets-operator-sa"
       role_arn        = module.iam_role.role_arn_cp_k8s_eso
+    },
+    {
+      namespace       = "app"
+      service_account = "db-migrator-sa"
+      role_arn        = module.iam_role.role_arn_cp_db_migrator
     },
   ]
 }

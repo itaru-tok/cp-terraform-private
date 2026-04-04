@@ -15,6 +15,17 @@ resource "aws_iam_role" "cp_slack_metrics_backend" {
         }
         Action = "sts:AssumeRole"
       }
+      ,
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+      }
     ]
   })
 }

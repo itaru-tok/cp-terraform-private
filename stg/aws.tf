@@ -123,6 +123,11 @@ module "eks_pod_identity" {
       service_account = "db-migrator-sa"
       role_arn        = module.iam_role.role_arn_cp_db_migrator
     },
+    {
+      namespace       = "app"
+      service_account = "slack-metrics-sa"
+      role_arn        = module.iam_role.role_arn_cp_slack_metrics_backend
+    },
   ]
 }
 
@@ -171,7 +176,7 @@ module "ecs_task_definition" {
 
   env = local.env
 
-  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:361434e" # CI/CD update target
+  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:0d0d629" # CI/CD update target
   ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
 
   ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
@@ -276,7 +281,7 @@ module "route53_itaru_uk" {
 module "ssm_parameter" {
   source                      = "../modules/aws/ssm_parameter"
   env                         = local.env
-  image_tag_slack_metrics     = "361434e"
+  image_tag_slack_metrics     = "0d0d629"
   image_tag_db_migrator       = "c5291c1"
   private_subnet_id_1a        = module.subnet.id_private_subnet_1a
   private_subnet_id_1c        = module.subnet.id_private_subnet_1c

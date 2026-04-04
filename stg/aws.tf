@@ -128,6 +128,11 @@ module "eks_pod_identity" {
       service_account = "slack-metrics-sa"
       role_arn        = module.iam_role.role_arn_cp_slack_metrics_backend
     },
+    {
+      namespace       = "kube-system"
+      service_account = "alb-controller-sa"
+      role_arn        = module.iam_role.role_arn_cp_k8s_alb_controller
+    },
   ]
 }
 

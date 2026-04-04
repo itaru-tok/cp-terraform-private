@@ -201,6 +201,40 @@ resource "aws_iam_role_policy_attachment" "cp_k8s_eso" {
 }
 
 /************************************************************
+cp-k8s-alb-controller (AWS Load Balancer Controller / EKS Pod Identity)
+公式 IAM ポリシーは v2.13.1 相当（Helm chart 1.13.x / Controller v2.13 系と整合）。更新手順: 同 URL の該当タグの iam_policy.json を取得して差し替え。
+************************************************************/
+resource "aws_iam_policy" "cp_k8s_alb_controller" {
+  name   = "cp-k8s-alb-controller-${var.env}"
+  policy = file("${path.module}/alb_controller_iam_policy.json")
+}
+
+resource "aws_iam_role" "cp_k8s_alb_controller" {
+  name = "cp-k8s-alb-controller-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_k8s_alb_controller" {
+  role       = aws_iam_role.cp_k8s_alb_controller.name
+  policy_arn = aws_iam_policy.cp_k8s_alb_controller.arn
+}
+
+/************************************************************
 cp-slack-metrics-client
 ************************************************************/
 resource "aws_iam_role" "cp_slack_metrics_client" {

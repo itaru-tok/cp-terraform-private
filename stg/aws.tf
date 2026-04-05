@@ -135,7 +135,7 @@ module "eks_pod_identity" {
     },
     {
       namespace       = "argocd"
-      service_account = "argocd-image-updater"
+      service_account = "argocd-image-updater-sa"
       role_arn        = module.iam_role.role_arn_cp_argocd_image_updater
     },
   ]

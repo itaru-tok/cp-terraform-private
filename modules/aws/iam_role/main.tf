@@ -235,6 +235,34 @@ resource "aws_iam_role_policy_attachment" "cp_k8s_alb_controller" {
 }
 
 /************************************************************
+cp-argocd-image-updater (Argo CD Image Updater / EKS Pod Identity → ECR 読み取り)
+************************************************************/
+resource "aws_iam_role" "cp_argocd_image_updater" {
+  name = "cp-argocd-image-updater-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_argocd_image_updater" {
+  role       = aws_iam_role.cp_argocd_image_updater.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+/************************************************************
 cp-slack-metrics-client
 ************************************************************/
 resource "aws_iam_role" "cp_slack_metrics_client" {

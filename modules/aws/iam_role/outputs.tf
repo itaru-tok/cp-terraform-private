@@ -37,3 +37,7 @@ output "role_arn_cp_k8s_eso" {
 output "role_arn_cp_k8s_alb_controller" {
   value = aws_iam_role.cp_k8s_alb_controller.arn
 }
+
+output "role_arn_cp_argocd_image_updater" {
+  value = aws_iam_role.cp_argocd_image_updater.arn
+}

@@ -139,6 +139,29 @@ resource "aws_iam_policy" "ec2_start_stop" {
 }
 
 /************************************************************
+cp-k8s-log-transfer（Fluent Bit → CloudWatch Logs / EKS Pod Identity）
+************************************************************/
+resource "aws_iam_policy" "cp_k8s_log_transfer" {
+  name = "cp-k8s-log-transfer-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
 GitHub Actions
 ************************************************************/
 resource "aws_iam_policy" "github_actions" {

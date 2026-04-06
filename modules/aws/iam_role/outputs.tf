@@ -41,3 +41,7 @@ output "role_arn_cp_k8s_alb_controller" {
 output "role_arn_cp_argocd_image_updater" {
   value = aws_iam_role.cp_argocd_image_updater.arn
 }
+
+output "role_arn_cp_k8s_log_transfer" {
+  value = aws_iam_role.cp_k8s_log_transfer.arn
+}

@@ -138,6 +138,11 @@ module "eks_pod_identity" {
       service_account = "argocd-image-updater-sa"
       role_arn        = module.iam_role.role_arn_cp_argocd_image_updater
     },
+    {
+      namespace       = "monitoring"
+      service_account = "log-transfer-sa"
+      role_arn        = module.iam_role.role_arn_cp_k8s_log_transfer
+    },
   ]
 }
 
@@ -251,6 +256,13 @@ module "acm_itaru_uk_us_east_1" {
   }
 }
 
+# EKS Ingress（ALB Controller）が作成する共有 ALB — sm-api-v2 はここを向ける
+data "aws_lb" "k8s_shared" {
+  tags = {
+    "elbv2.k8s.aws/cluster" = local.eks_cluster_name
+  }
+}
+
 module "route53_itaru_uk" {
   source    = "../modules/aws/route53_unit"
   zone_name = local.base_host
@@ -262,6 +274,15 @@ module "route53_itaru_uk" {
       alias = {
         name                   = module.alb.dns_name
         zone_id                = module.alb.zone_id_ap_northeast_1
+        evaluate_target_health = true
+      }
+    },
+    {
+      name = "sm-api-v2.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = data.aws_lb.k8s_shared.dns_name
+        zone_id                = data.aws_lb.k8s_shared.zone_id
         evaluate_target_health = true
       }
     },

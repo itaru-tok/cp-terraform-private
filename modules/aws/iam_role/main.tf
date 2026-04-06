@@ -263,6 +263,34 @@ resource "aws_iam_role_policy_attachment" "cp_argocd_image_updater" {
 }
 
 /************************************************************
+cp-k8s-log-transfer（Fluent Bit / aws-for-fluent-bit → CloudWatch Logs / EKS Pod Identity）
+************************************************************/
+resource "aws_iam_role" "cp_k8s_log_transfer" {
+  name = "cp-k8s-log-transfer-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_k8s_log_transfer" {
+  role       = aws_iam_role.cp_k8s_log_transfer.name
+  policy_arn = aws_iam_policy.cp_k8s_log_transfer.arn
+}
+
+/************************************************************
 cp-slack-metrics-client
 ************************************************************/
 resource "aws_iam_role" "cp_slack_metrics_client" {

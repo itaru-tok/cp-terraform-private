@@ -38,6 +38,10 @@ output "role_arn_cp_k8s_alb_controller" {
   value = aws_iam_role.cp_k8s_alb_controller.arn
 }
 
+output "role_arn_cp_k8s_ebs_csi_driver" {
+  value = aws_iam_role.cp_k8s_ebs_csi_driver.arn
+}
+
 output "role_arn_cp_argocd_image_updater" {
   value = aws_iam_role.cp_argocd_image_updater.arn
 }

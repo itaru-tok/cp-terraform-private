@@ -134,6 +134,11 @@ module "eks_pod_identity" {
       role_arn        = module.iam_role.role_arn_cp_k8s_alb_controller
     },
     {
+      namespace       = "kube-system"
+      service_account = "ebs-csi-controller-sa"
+      role_arn        = module.iam_role.role_arn_cp_k8s_ebs_csi_driver
+    },
+    {
       namespace       = "argocd"
       service_account = "argocd-image-updater-sa"
       role_arn        = module.iam_role.role_arn_cp_argocd_image_updater

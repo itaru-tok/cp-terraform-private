@@ -235,6 +235,34 @@ resource "aws_iam_role_policy_attachment" "cp_k8s_alb_controller" {
 }
 
 /************************************************************
+cp-k8s-ebs-csi-driver (AWS EBS CSI Driver / EKS Pod Identity)
+************************************************************/
+resource "aws_iam_role" "cp_k8s_ebs_csi_driver" {
+  name = "cp-k8s-ebs-csi-driver-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "pods.eks.amazonaws.com"
+        }
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_k8s_ebs_csi_driver" {
+  role       = aws_iam_role.cp_k8s_ebs_csi_driver.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+/************************************************************
 cp-argocd-image-updater (Argo CD Image Updater / EKS Pod Identity → ECR 読み取り)
 ************************************************************/
 resource "aws_iam_role" "cp_argocd_image_updater" {

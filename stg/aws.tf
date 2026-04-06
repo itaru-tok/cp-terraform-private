@@ -151,6 +151,14 @@ module "eks_pod_identity" {
   ]
 }
 
+resource "aws_eks_addon" "aws_ebs_csi_driver" {
+  cluster_name  = local.eks_cluster_name
+  addon_name    = "aws-ebs-csi-driver"
+  addon_version = "v1.57.1-eksbuild.1"
+
+  depends_on = [module.eks_pod_identity]
+}
+
 module "ec2" {
   source           = "../modules/aws/ec2"
   env              = local.env

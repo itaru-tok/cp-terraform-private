@@ -5,3 +5,7 @@ output "arn_db_main_instance" {
 output "arn_argocd_github_oidc" {
   value = aws_secretsmanager_secret.argocd_github_oidc.arn
 }
+
+output "arn_grafana_github_oidc" {
+  value = aws_secretsmanager_secret.grafana_github_oidc.arn
+}

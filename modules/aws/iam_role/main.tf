@@ -173,6 +173,65 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
 }
 
 /************************************************************
+Kubernetes クラスターロール（EKS コントロールプレーン）
+************************************************************/
+resource "aws_iam_role" "cp_k8s_cluster" {
+  name = "cp-k8s-cluster-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_k8s_cluster" {
+  role       = aws_iam_role.cp_k8s_cluster.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}
+
+/************************************************************
+Kubernetes ノードロール（EKS ワーカー）
+************************************************************/
+resource "aws_iam_role" "cp_k8s_node" {
+  name = "cp-k8s-node-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_k8s_node" {
+  for_each = {
+    eks_node = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+    eks_cni  = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+    ecr      = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  }
+
+  role       = aws_iam_role.cp_k8s_node.name
+  policy_arn = each.value
+}
+
+/************************************************************
 cp-k8s-eso (External Secrets Operator / EKS Pod Identity)
 ************************************************************/
 resource "aws_iam_role" "cp_k8s_eso" {

@@ -16,13 +16,15 @@ module "igw" {
 }
 
 module "rtb" {
-  source               = "../modules/aws/route_table"
-  env                  = local.env
-  vpc_id               = module.vpc.id
-  gateway_id           = module.igw.id
-  public_subnet_ids    = module.subnet.public_subnet_ids
-  private_subnet_ids   = module.subnet.private_subnet_ids
-  network_interface_id = module.ec2.network_interface_id_nat_1a
+  source             = "../modules/aws/route_table"
+  env                = local.env
+  vpc_id             = module.vpc.id
+  gateway_id         = module.igw.id
+  public_subnet_ids  = module.subnet.public_subnet_ids
+  private_subnet_ids = module.subnet.private_subnet_ids
+  # MEMO: コスト削減のため（NAT を戻すときは ec2 モジュールと合わせて有効化）
+  # network_interface_id = module.ec2.network_interface_id_nat_1a
+  network_interface_id = null
 }
 
 module "security_group" {
@@ -95,94 +97,98 @@ module "iam_role" {
   account_id = local.account_id
 }
 
-module "eks" {
-  source             = "../modules/aws/eks"
-  env                = local.env
-  private_subnet_ids = module.subnet.private_subnet_ids
-  cloud_pratica = {
-    cluster_role_arn   = module.iam_role.role_arn_cp_k8s_cluster
-    node_role_arn      = module.iam_role.role_arn_cp_k8s_node
-    node_instance_type = "t3.large"
-    node_capacity_type = "SPOT"
-    node_desired_count = 1
-    kubernetes_version = local.eks_kubernetes_version
-  }
-}
+# MEMO: コスト削減のため
+# module "eks" {
+#   source             = "../modules/aws/eks"
+#   env                = local.env
+#   private_subnet_ids = module.subnet.private_subnet_ids
+#   cloud_pratica = {
+#     cluster_role_arn     = module.iam_role.role_arn_cp_k8s_cluster
+#     node_role_arn        = module.iam_role.role_arn_cp_k8s_node
+#     node_instance_type   = "t3.large"
+#     node_capacity_type   = "SPOT"
+#     node_desired_count   = 1
+#     kubernetes_version   = local.eks_kubernetes_version
+#   }
+# }
 
 # EKS クラスター SG → RDS（cp-db）: モジュール外で定義すると Terraform LS が「想定外の属性」と誤検知しない
-resource "aws_vpc_security_group_ingress_rule" "db_from_eks_cluster" {
-  security_group_id            = module.security_group.id_db
-  referenced_security_group_id = module.eks.cp_cluster_security_group_id
-  from_port                    = 5432
-  to_port                      = 5432
-  ip_protocol                  = "tcp"
-}
+# MEMO: コスト削減のため
+# resource "aws_vpc_security_group_ingress_rule" "db_from_eks_cluster" {
+#   security_group_id            = module.security_group.id_db
+#   referenced_security_group_id = module.eks.cp_cluster_security_group_id
+#   from_port                    = 5432
+#   to_port                      = 5432
+#   ip_protocol                  = "tcp"
+# }
 
-module "eks_pod_identity" {
-  source       = "../modules/aws/eks_pod_identity_unit"
-  cluster_name = local.eks_cluster_name
-  associations = [
-    {
-      namespace       = "external-secrets"
-      service_account = "external-secrets-operator-sa"
-      role_arn        = module.iam_role.role_arn_cp_k8s_eso
-    },
-    {
-      namespace       = "app"
-      service_account = "db-migrator-sa"
-      role_arn        = module.iam_role.role_arn_cp_db_migrator
-    },
-    {
-      namespace       = "app"
-      service_account = "slack-metrics-sa"
-      role_arn        = module.iam_role.role_arn_cp_slack_metrics_backend
-    },
-    {
-      namespace       = "kube-system"
-      service_account = "alb-controller-sa"
-      role_arn        = module.iam_role.role_arn_cp_k8s_alb_controller
-    },
-    {
-      namespace       = "kube-system"
-      service_account = "ebs-csi-controller-sa"
-      role_arn        = module.iam_role.role_arn_cp_k8s_ebs_csi_driver
-    },
-    {
-      namespace       = "kube-system"
-      service_account = "ebs-csi-driver-sa"
-      role_arn        = module.iam_role.role_arn_cp_k8s_ebs_csi_driver
-    },
-    {
-      namespace       = "argocd"
-      service_account = "argocd-image-updater-sa"
-      role_arn        = module.iam_role.role_arn_cp_argocd_image_updater
-    },
-    {
-      namespace       = "monitoring"
-      service_account = "log-transfer-sa"
-      role_arn        = module.iam_role.role_arn_cp_k8s_log_transfer
-    },
-  ]
+# MEMO: コスト削減のため
+# module "eks_pod_identity" {
+#   source         = "../modules/aws/eks_pod_identity_unit"
+#   cluster_name   = local.eks_cluster_name
+#   associations = [
+#     {
+#       namespace       = "external-secrets"
+#       service_account = "external-secrets-operator-sa"
+#       role_arn        = module.iam_role.role_arn_cp_k8s_eso
+#     },
+#     {
+#       namespace       = "app"
+#       service_account = "db-migrator-sa"
+#       role_arn        = module.iam_role.role_arn_cp_db_migrator
+#     },
+#     {
+#       namespace       = "app"
+#       service_account = "slack-metrics-sa"
+#       role_arn        = module.iam_role.role_arn_cp_slack_metrics_backend
+#     },
+#     {
+#       namespace       = "kube-system"
+#       service_account = "alb-controller-sa"
+#       role_arn        = module.iam_role.role_arn_cp_k8s_alb_controller
+#     },
+#     {
+#       namespace       = "kube-system"
+#       service_account = "ebs-csi-controller-sa"
+#       role_arn        = module.iam_role.role_arn_cp_k8s_ebs_csi_driver
+#     },
+#     {
+#       namespace       = "kube-system"
+#       service_account = "ebs-csi-driver-sa"
+#       role_arn        = module.iam_role.role_arn_cp_k8s_ebs_csi_driver
+#     },
+#     {
+#       namespace       = "argocd"
+#       service_account = "argocd-image-updater-sa"
+#       role_arn        = module.iam_role.role_arn_cp_argocd_image_updater
+#     },
+#     {
+#       namespace       = "monitoring"
+#       service_account = "log-transfer-sa"
+#       role_arn        = module.iam_role.role_arn_cp_k8s_log_transfer
+#     },
+#   ]
+#
+#   depends_on = [module.eks]
+# }
 
-  depends_on = [module.eks]
-}
-
-module "ec2" {
-  source           = "../modules/aws/ec2"
-  env              = local.env
-  public_subnet_id = module.subnet.id_public_subnet_1a
-  bastion = {
-    ami_id               = "ami-0d48053661ff2089b"
-    iam_instance_profile = module.iam_role.instance_profile_cp_bastion
-    security_group_id    = module.security_group.id_bastion
-  }
-  nat_1a = {
-    # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
-    ami_id               = "ami-063fed300ac346a89"
-    iam_instance_profile = module.iam_role.instance_profile_cp_nat
-    security_group_id    = module.security_group.id_nat
-  }
-}
+# MEMO: コスト削減のため
+# module "ec2" {
+#   source           = "../modules/aws/ec2"
+#   env              = local.env
+#   public_subnet_id = module.subnet.id_public_subnet_1a
+#   bastion = {
+#     ami_id               = "ami-0d48053661ff2089b"
+#     iam_instance_profile = module.iam_role.instance_profile_cp_bastion
+#     security_group_id    = module.security_group.id_bastion
+#   }
+#   nat_1a = {
+#     # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
+#     ami_id               = "ami-063fed300ac346a89"
+#     iam_instance_profile = module.iam_role.instance_profile_cp_nat
+#     security_group_id    = module.security_group.id_nat
+#   }
+# }
 
 module "rds" {
   source               = "../modules/aws/rds"
@@ -251,12 +257,10 @@ module "event_bridge_scheduler" {
   }
 
   cost_cutter = {
-    enable       = true
-    iam_role_arn = module.iam_role.role_arn_cp_scheduler_cost_cutter
-    ec2_instance_ids = [
-      module.ec2.id_nat_1a,
-      module.ec2.id_bastion
-    ]
+    # MEMO: コスト削減のため（EC2 モジュール停止時はスケジュール無効・対象なし）
+    enable                                = false
+    iam_role_arn                          = module.iam_role.role_arn_cp_scheduler_cost_cutter
+    ec2_instance_ids                      = []
     ecs_cluster_arn_cloud_pratica_backend = module.ecs.ecs_cluster_arn_cloud_pratica_backend
   }
 }
@@ -278,11 +282,12 @@ module "acm_itaru_uk_us_east_1" {
 }
 
 # EKS Ingress（ALB Controller）が作成する共有 ALB — sm-api-v2 はここを向ける
-data "aws_lb" "k8s_shared" {
-  tags = {
-    "elbv2.k8s.aws/cluster" = local.eks_cluster_name
-  }
-}
+# MEMO: コスト削減のため（EKS 停止時はコメントアウト。復旧後に sm-api-v2 レコードも戻す）
+# data "aws_lb" "k8s_shared" {
+#   tags = {
+#     "elbv2.k8s.aws/cluster" = local.eks_cluster_name
+#   }
+# }
 
 module "route53_itaru_uk" {
   source    = "../modules/aws/route53_unit"
@@ -298,15 +303,16 @@ module "route53_itaru_uk" {
         evaluate_target_health = true
       }
     },
-    {
-      name = "sm-api-v2.${local.base_host}"
-      type = "A"
-      alias = {
-        name                   = data.aws_lb.k8s_shared.dns_name
-        zone_id                = data.aws_lb.k8s_shared.zone_id
-        evaluate_target_health = true
-      }
-    },
+    # MEMO: コスト削減のため（data.aws_lb.k8s_shared 停止に合わせてコメントアウト）
+    # {
+    #   name = "sm-api-v2.${local.base_host}"
+    #   type = "A"
+    #   alias = {
+    #     name                   = data.aws_lb.k8s_shared.dns_name
+    #     zone_id                = data.aws_lb.k8s_shared.zone_id
+    #     evaluate_target_health = true
+    #   }
+    # },
     {
       name = "sm.${local.base_host}"
       type = "A"

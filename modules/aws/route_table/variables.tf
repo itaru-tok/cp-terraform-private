@@ -17,6 +17,9 @@ variable "private_subnet_ids" {
 }
 
 variable "network_interface_id" {
-  type = string
+  type     = string
+  nullable = true
+  default  = null
+  # null のときプライベート RT に NAT 経由の 0.0.0.0/0 ルートを付けない（NAT インスタンス停止・コスト削減用）
 }
 

@@ -16,15 +16,13 @@ module "igw" {
 }
 
 module "rtb" {
-  source             = "../modules/aws/route_table"
-  env                = local.env
-  vpc_id             = module.vpc.id
-  gateway_id         = module.igw.id
-  public_subnet_ids  = module.subnet.public_subnet_ids
-  private_subnet_ids = module.subnet.private_subnet_ids
-  # MEMO: コスト削減のため（NAT を戻すときは ec2 モジュールと合わせて有効化）
-  # network_interface_id = module.ec2.network_interface_id_nat_1a
-  network_interface_id = null
+  source               = "../modules/aws/route_table"
+  env                  = local.env
+  vpc_id               = module.vpc.id
+  gateway_id           = module.igw.id
+  public_subnet_ids    = module.subnet.public_subnet_ids
+  private_subnet_ids   = module.subnet.private_subnet_ids
+  network_interface_id = module.ec2.network_interface_id_nat_1a
 }
 
 module "security_group" {
@@ -172,23 +170,22 @@ module "iam_role" {
 #   depends_on = [module.eks]
 # }
 
-# MEMO: コスト削減のため
-# module "ec2" {
-#   source           = "../modules/aws/ec2"
-#   env              = local.env
-#   public_subnet_id = module.subnet.id_public_subnet_1a
-#   bastion = {
-#     ami_id               = "ami-0d48053661ff2089b"
-#     iam_instance_profile = module.iam_role.instance_profile_cp_bastion
-#     security_group_id    = module.security_group.id_bastion
-#   }
-#   nat_1a = {
-#     # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
-#     ami_id               = "ami-063fed300ac346a89"
-#     iam_instance_profile = module.iam_role.instance_profile_cp_nat
-#     security_group_id    = module.security_group.id_nat
-#   }
-# }
+module "ec2" {
+  source           = "../modules/aws/ec2"
+  env              = local.env
+  public_subnet_id = module.subnet.id_public_subnet_1a
+  bastion = {
+    ami_id               = "ami-0d48053661ff2089b"
+    iam_instance_profile = module.iam_role.instance_profile_cp_bastion
+    security_group_id    = module.security_group.id_bastion
+  }
+  nat_1a = {
+    # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
+    ami_id               = "ami-063fed300ac346a89"
+    iam_instance_profile = module.iam_role.instance_profile_cp_nat
+    security_group_id    = module.security_group.id_nat
+  }
+}
 
 module "rds" {
   source               = "../modules/aws/rds"

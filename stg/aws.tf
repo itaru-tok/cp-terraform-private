@@ -249,9 +249,9 @@ module "lambda" {
   private_subnet_ids = module.subnet.private_subnet_ids
 
   slack_metrics = {
-    role_arn            = module.iam_role.role_arn_cp_slack_metrics_lambda
-    image_uri           = "${module.ecr.url_slack_metrics_lambda}:${local.slack_metrics_lambda_image_tag}"
-    security_group_id   = module.security_group.id_slack_metrics_lambda
+    role_arn          = module.iam_role.role_arn_cp_slack_metrics_lambda
+    image_uri         = "${module.ecr.url_slack_metrics_lambda}:${local.slack_metrics_lambda_image_tag}"
+    security_group_id = module.security_group.id_slack_metrics_lambda
   }
 }
 

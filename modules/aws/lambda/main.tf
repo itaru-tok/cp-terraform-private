@@ -56,6 +56,35 @@ resource "aws_lambda_function" "slack_metrics_batch" {
   }
 }
 
+resource "aws_lambda_function" "slack_metrics_worker" {
+  function_name = "slack-metrics-worker-${var.env}"
+  role          = var.slack_metrics.role_arn
+  image_uri     = var.slack_metrics.image_uri
+  package_type  = "Image"
+  description   = "Slack Metricsの非同期WorkerとなるLambda関数"
+  memory_size   = 1024
+  timeout       = 900
+
+  environment {
+    variables = {
+      ENV  = var.env
+      MODE = "sqs"
+    }
+  }
+
+  vpc_config {
+    ipv6_allowed_for_dual_stack = false
+    security_group_ids = [
+      var.slack_metrics.security_group_id
+    ]
+    subnet_ids = var.private_subnet_ids
+  }
+
+  lifecycle {
+    ignore_changes = [image_uri]
+  }
+}
+
 resource "aws_lambda_permission" "scheduler_sync_workspaces_v3" {
   statement_id  = "AllowExecutionFromEventBridgeScheduler"
   action        = "lambda:InvokeFunction"

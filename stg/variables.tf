@@ -6,7 +6,7 @@ locals {
   ses_mail_from_domain              = "mail.stg.itaru.uk"
   amplify_domain_name_slack_metrics = "develop.d15icriq5um5ws.amplifyapp.com"
 
-  # EKS Pod Identity: クラスター名は EKS コンソールの一覧と一致させる（cloud-pratica-terraform の EKS は cloud-pratica-${env}）
+  # EKS Pod Identity 用（コンソールのクラスター名と一致）
   eks_cluster_name = "cloud-pratica-stg"
 
   # 既存クラスタを import する場合はコンソールのバージョンと一致させる（ずれると plan で差分や置換が出る）

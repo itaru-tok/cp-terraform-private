@@ -101,6 +101,25 @@ resource "aws_iam_policy" "db_connect" {
 }
 
 /************************************************************
+EventBridge Scheduler → slack-metrics-batch Lambda
+************************************************************/
+resource "aws_iam_policy" "scheduler_invoke_slack_metrics_batch_lambda" {
+  name = "scheduler-invoke-slack-metrics-batch-lambda-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = "arn:aws:lambda:${var.region}:${var.account_id}:function:slack-metrics-batch-${var.env}"
+      }
+    ]
+  })
+}
+
+/************************************************************
 ECS RunTask
 ************************************************************/
 resource "aws_iam_policy" "ecs_run_task" {

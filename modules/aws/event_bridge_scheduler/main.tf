@@ -61,6 +61,33 @@ resource "aws_scheduler_schedule" "sync_workspaces" {
   }
 }
 
+resource "aws_scheduler_schedule" "sync_workspaces_v3" {
+  count = var.slack_metrics_v3 != null ? 1 : 0
+
+  group_name                   = aws_scheduler_schedule_group.slack_metrics.name
+  name                         = "sync-workspaces-v3-${var.env}"
+  description                  = "Lambdaにてワークスペース同期処理を実行する"
+  schedule_expression          = "cron(0 2 * * ? *)"
+  schedule_expression_timezone = "Asia/Tokyo"
+  state                        = "DISABLED"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn = var.slack_metrics_v3.lambda_arn
+    input = jsonencode({
+      type = "sync-workspaces"
+    })
+    role_arn = var.slack_metrics.iam_role_arn
+    retry_policy {
+      maximum_event_age_in_seconds = 3600
+      maximum_retry_attempts       = 3
+    }
+  }
+}
+
 /************************************************************
 Cost Cutter
 ************************************************************/

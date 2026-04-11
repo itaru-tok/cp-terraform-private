@@ -9,3 +9,7 @@ output "arn_slack_metrics_api" {
 output "function_name_slack_metrics_api" {
   value = aws_lambda_function.slack_metrics_api.function_name
 }
+
+output "arn_slack_metrics_batch" {
+  value = aws_lambda_function.slack_metrics_batch.arn
+}

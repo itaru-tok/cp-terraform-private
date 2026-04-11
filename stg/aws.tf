@@ -241,6 +241,20 @@ module "ecs_task_definition" {
   }
 }
 
+module "lambda" {
+  source             = "../modules/aws/lambda"
+  env                = local.env
+  aws_account_id     = local.account_id
+  region             = local.region
+  private_subnet_ids = module.subnet.private_subnet_ids
+
+  slack_metrics = {
+    role_arn            = module.iam_role.role_arn_cp_slack_metrics_lambda
+    image_uri           = "${module.ecr.url_slack_metrics_lambda}:${local.slack_metrics_lambda_image_tag}"
+    security_group_id   = module.security_group.id_slack_metrics_lambda
+  }
+}
+
 module "event_bridge_scheduler" {
   source             = "../modules/aws/event_bridge_scheduler"
   env                = local.env
@@ -251,6 +265,10 @@ module "event_bridge_scheduler" {
     ecs_cluster_arn                          = module.ecs.ecs_cluster_arn_cloud_pratica_backend
     ecs_task_definition_arn_without_revision = module.ecs_task_definition.arn_without_revision_slack_metrics_batch
     security_group_id                        = module.security_group.id_slack_metrics_backend
+  }
+
+  slack_metrics_v3 = {
+    lambda_arn = module.lambda.arn_slack_metrics_batch
   }
 
   cost_cutter = {
@@ -347,18 +365,3 @@ module "ssm_parameter" {
   tg_arn_slack_metrics_api    = module.target_group.arn_slack_metrics_api
 }
 
-# 手動作成した Lambda を import する例（関数名が slack-metrics-api-stg のとき）:
-#   terraform import 'module.lambda.aws_lambda_function.slack_metrics_api' slack-metrics-api-stg
-module "lambda" {
-  source             = "../modules/aws/lambda"
-  env                = local.env
-  aws_account_id     = local.account_id
-  region             = local.region
-  private_subnet_ids = module.subnet.private_subnet_ids
-
-  slack_metrics = {
-    role_arn          = module.iam_role.role_arn_cp_slack_metrics_lambda
-    image_uri         = "${module.ecr.url_slack_metrics_lambda}:${local.slack_metrics_lambda_image_tag}"
-    security_group_id = module.security_group.id_slack_metrics_lambda
-  }
-}

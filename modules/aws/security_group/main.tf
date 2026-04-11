@@ -52,6 +52,15 @@ resource "aws_security_group" "db" {
   }
 }
 
+resource "aws_security_group" "slack_metrics_lambda" {
+  name        = "cp-slack-metrics-lambda-${var.env}"
+  description = "slack-metrics Lambda (VPC)"
+  vpc_id      = var.vpc_id
+  tags = {
+    Name = "cp-slack-metrics-lambda-${var.env}"
+  }
+}
+
 # --- Inbound Rules ---
 
 # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にstg/prdのコンソールから直接設定済み）
@@ -61,6 +70,7 @@ resource "aws_vpc_security_group_ingress_rule" "db" {
     bastion               = aws_security_group.bastion.id
     slack_metrics_backend = aws_security_group.slack_metrics_backend.id
     db_migrator           = aws_security_group.db_migrator.id
+    slack_metrics_lambda  = aws_security_group.slack_metrics_lambda.id
   }
 
   security_group_id            = aws_security_group.db.id
@@ -113,6 +123,12 @@ resource "aws_vpc_security_group_egress_rule" "db_migrator" {
 
 resource "aws_vpc_security_group_egress_rule" "db" {
   security_group_id = aws_security_group.db.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "slack_metrics_lambda" {
+  security_group_id = aws_security_group.slack_metrics_lambda.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }

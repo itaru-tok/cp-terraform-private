@@ -40,6 +40,67 @@ resource "aws_iam_policy" "cloud_watch_logs_write" {
 }
 
 /************************************************************
+Parameter Store Read（Lambda 環境変数用）
+************************************************************/
+resource "aws_iam_policy" "parameter_store_read" {
+  name = "parameter-store-read-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
+SQS Read and Write
+************************************************************/
+resource "aws_iam_policy" "sqs_read_write" {
+  name = "sqs-read-write-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
+DB Connect（RDS IAM 認証）
+************************************************************/
+resource "aws_iam_policy" "db_connect" {
+  name = "db-connect-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "rds-db:connect"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
 ECS RunTask
 ************************************************************/
 resource "aws_iam_policy" "ecs_run_task" {
@@ -197,6 +258,7 @@ resource "aws_iam_policy" "github_actions" {
         ]
         Resource = [
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-${var.env}",
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-lambda-${var.env}",
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/db-migrator-${var.env}"
         ]
       },

@@ -5,3 +5,7 @@ output "url_db_migrator" {
 output "url_slack_metrics" {
   value = module.ecr_slack_metrics.repository_url
 }
+
+output "url_slack_metrics_lambda" {
+  value = module.ecr_slack_metrics_lambda.repository_url
+}

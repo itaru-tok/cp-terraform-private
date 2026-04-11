@@ -43,6 +43,42 @@ resource "aws_iam_role_policy_attachment" "cp_slack_metrics_backend" {
 }
 
 /************************************************************
+cp-slack-metrics-lambda（コンテナ Lambda / VPC）
+SES はカリキュラム都合で付与しない。VPC 用に AWSLambdaVPCAccessExecutionRole。
+************************************************************/
+resource "aws_iam_role" "cp_slack_metrics_lambda" {
+  name = "cp-slack-metrics-lambda-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_slack_metrics_lambda" {
+  for_each = {
+    cloudwatch      = aws_iam_policy.cloud_watch_logs_write.arn
+    parameter_store = aws_iam_policy.parameter_store_read.arn
+    sqs             = aws_iam_policy.sqs_read_write.arn
+    secrets_manager = aws_iam_policy.secrets_manager_read.arn
+    rds_db_connect  = aws_iam_policy.db_connect.arn
+    vpc_access      = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+    ecr_readonly    = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  }
+
+  role       = aws_iam_role.cp_slack_metrics_lambda.name
+  policy_arn = each.value
+}
+
+/************************************************************
 cp-bastion
 ************************************************************/
 resource "aws_iam_role" "cp_bastion" {

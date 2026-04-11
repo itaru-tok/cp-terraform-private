@@ -14,3 +14,18 @@ output "role_arn_cp_k8s_log_transfer" {
   value       = module.iam_role.role_arn_cp_k8s_log_transfer
   description = "Fluent Bit（aws-for-fluent-bit）用 EKS Pod Identity IAM ロール ARN"
 }
+
+output "ecr_repository_url_slack_metrics_lambda" {
+  value       = module.ecr.url_slack_metrics_lambda
+  description = "slack-metrics Lambda コンテナ用 ECR（例: slack-metrics-lambda-stg）"
+}
+
+output "role_arn_cp_slack_metrics_lambda" {
+  value       = module.iam_role.role_arn_cp_slack_metrics_lambda
+  description = "cp-slack-metrics-lambda-stg（VPC Lambda 実行ロール）"
+}
+
+output "security_group_id_slack_metrics_lambda" {
+  value       = module.security_group.id_slack_metrics_lambda
+  description = "cp-slack-metrics-lambda-stg セキュリティグループ ID"
+}

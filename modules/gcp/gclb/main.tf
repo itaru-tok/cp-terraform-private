@@ -5,7 +5,7 @@ resource "google_compute_region_network_endpoint_group" "slack_metrics_api" {
   project               = var.project
   region                = "asia-northeast1"
   cloud_run {
-    service  = "slack-metrics-api-${var.env}"
+    service = "slack-metrics-api-${var.env}"
   }
 }
 

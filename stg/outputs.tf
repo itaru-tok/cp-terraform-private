@@ -29,3 +29,8 @@ output "security_group_id_slack_metrics_lambda" {
   value       = module.security_group.id_slack_metrics_lambda
   description = "cp-slack-metrics-lambda-stg セキュリティグループ ID"
 }
+
+output "lambda_invoke_arn_slack_metrics_api" {
+  value       = module.lambda.invoke_arn_slack_metrics_api
+  description = "slack-metrics-api Lambda の invoke ARN"
+}

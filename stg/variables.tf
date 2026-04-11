@@ -11,4 +11,7 @@ locals {
 
   # 既存クラスタを import する場合はコンソールのバージョンと一致させる（ずれると plan で差分や置換が出る）
   eks_kubernetes_version = "1.35"
+
+  # slack-metrics-api Lambda（コンテナ）のイメージタグ。import 前にコンソールまたは ECR の実タグに合わせる
+  slack_metrics_lambda_image_tag = "c5029c5"
 }

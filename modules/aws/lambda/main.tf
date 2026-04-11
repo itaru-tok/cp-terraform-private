@@ -85,6 +85,14 @@ resource "aws_lambda_function" "slack_metrics_worker" {
   }
 }
 
+resource "aws_lambda_event_source_mapping" "slack_metrics_worker" {
+  count            = var.slack_metrics.sqs_arn != null ? 1 : 0
+  event_source_arn = var.slack_metrics.sqs_arn
+  function_name    = aws_lambda_function.slack_metrics_worker.function_name
+  batch_size       = 10
+  enabled          = true
+}
+
 resource "aws_lambda_permission" "scheduler_sync_workspaces_v3" {
   statement_id  = "AllowExecutionFromEventBridgeScheduler"
   action        = "lambda:InvokeFunction"

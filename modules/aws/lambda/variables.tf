@@ -21,5 +21,6 @@ variable "slack_metrics" {
     image_uri         = string
     security_group_id = string
     api_gateway_id    = optional(string)
+    sqs_arn           = optional(string)
   })
 }

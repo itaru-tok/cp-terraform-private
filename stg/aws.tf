@@ -197,6 +197,18 @@ module "rds" {
   db_security_group_id = module.security_group.id_db
 }
 
+module "rds_proxy" {
+  source = "../modules/aws/rds_proxy"
+
+  env                         = local.env
+  db_proxy_name               = "cloud-pratica-${local.env}"
+  vpc_subnet_ids              = module.subnet.private_subnet_ids
+  rds_proxy_security_group_id = module.security_group.id_rds_proxy
+  secrets_manager_secret_arn  = module.secrets_manager.arn_db_slack_metrics_rds_proxy
+  iam_role_arn_rds_proxy      = module.iam_role.role_arn_cp_rds_proxy
+  db_instance_identifier      = "cloud-pratica-${local.env}"
+}
+
 module "ecs" {
   source = "../modules/aws/ecs"
   env    = local.env

@@ -61,6 +61,15 @@ resource "aws_security_group" "slack_metrics_lambda" {
   }
 }
 
+resource "aws_security_group" "rds_proxy" {
+  name        = "cp-rds-proxy-${var.env}"
+  description = "RDS Proxy (slack-metrics, etc.)"
+  vpc_id      = var.vpc_id
+  tags = {
+    Name = "cp-rds-proxy-${var.env}"
+  }
+}
+
 # --- Inbound Rules ---
 
 # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にstg/prdのコンソールから直接設定済み）
@@ -70,11 +79,27 @@ resource "aws_vpc_security_group_ingress_rule" "db" {
     bastion               = aws_security_group.bastion.id
     slack_metrics_backend = aws_security_group.slack_metrics_backend.id
     db_migrator           = aws_security_group.db_migrator.id
-    slack_metrics_lambda  = aws_security_group.slack_metrics_lambda.id
+    rds_proxy             = aws_security_group.rds_proxy.id
   }
 
   security_group_id            = aws_security_group.db.id
   referenced_security_group_id = each.value
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "rds_proxy_from_slack_metrics_lambda" {
+  security_group_id            = aws_security_group.rds_proxy.id
+  referenced_security_group_id = aws_security_group.slack_metrics_lambda.id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "rds_proxy_to_db" {
+  security_group_id            = aws_security_group.rds_proxy.id
+  referenced_security_group_id = aws_security_group.db.id
   from_port                    = 5432
   to_port                      = 5432
   ip_protocol                  = "tcp"

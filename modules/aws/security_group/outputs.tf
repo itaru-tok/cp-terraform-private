@@ -25,3 +25,7 @@ output "id_db_migrator" {
 output "id_db" {
   value = aws_security_group.db.id
 }
+
+output "id_rds_proxy" {
+  value = aws_security_group.rds_proxy.id
+}

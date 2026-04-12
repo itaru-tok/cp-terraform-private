@@ -79,6 +79,47 @@ resource "aws_iam_role_policy_attachment" "cp_slack_metrics_lambda" {
 }
 
 /************************************************************
+cp-rds-proxy（RDS Proxy が Secrets Manager の認証情報を読む）
+************************************************************/
+resource "aws_iam_role" "cp_rds_proxy" {
+  name = "cp-rds-proxy-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "rds.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cp_rds_proxy_secrets" {
+  count = var.rds_proxy_secret_arn != "" ? 1 : 0
+
+  name = "rds-proxy-read-db-slack-metrics-secret"
+  role = aws_iam_role.cp_rds_proxy.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = var.rds_proxy_secret_arn
+      }
+    ]
+  })
+}
+
+/************************************************************
 cp-bastion
 ************************************************************/
 resource "aws_iam_role" "cp_bastion" {

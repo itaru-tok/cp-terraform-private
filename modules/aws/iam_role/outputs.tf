@@ -18,6 +18,14 @@ output "role_arn_cp_slack_metrics_lambda" {
   value = aws_iam_role.cp_slack_metrics_lambda.arn
 }
 
+output "role_arn_cp_rds_proxy" {
+  value = aws_iam_role.cp_rds_proxy.arn
+}
+
+output "role_name_cp_rds_proxy" {
+  value = aws_iam_role.cp_rds_proxy.name
+}
+
 output "role_arn_cp_db_migrator" {
   value = aws_iam_role.cp_db_migrator.arn
 }

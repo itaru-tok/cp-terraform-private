@@ -95,6 +95,16 @@ resource "aws_iam_policy" "db_connect" {
           "rds-db:connect"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "RDSProxyDescribe"
+        Effect = "Allow"
+        Action = [
+          "rds:DescribeDBProxies",
+          "rds:DescribeDBProxyEndpoints",
+          "rds:DescribeDBProxyTargetGroups"
+        ]
+        Resource = "*"
       }
     ]
   })

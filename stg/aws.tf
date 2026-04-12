@@ -93,6 +93,8 @@ module "iam_role" {
   env        = local.env
   region     = local.region
   account_id = local.account_id
+
+  rds_proxy_secret_arn = module.secrets_manager.arn_db_slack_metrics_rds_proxy
 }
 
 # MEMO: コスト削減のため
@@ -364,5 +366,10 @@ module "ssm_parameter" {
   sg_id_slack_metrics_backend = module.security_group.id_slack_metrics_backend
   sg_id_db_migrator           = module.security_group.id_db_migrator
   tg_arn_slack_metrics_api    = module.target_group.arn_slack_metrics_api
+}
+
+moved {
+  from = aws_iam_role_policy.cp_rds_proxy_secrets
+  to   = module.iam_role.aws_iam_role_policy.cp_rds_proxy_secrets[0]
 }
 

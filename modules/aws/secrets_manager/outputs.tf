@@ -3,5 +3,6 @@ output "arn_db_main_instance" {
 }
 
 output "arn_db_slack_metrics_rds_proxy" {
-  value = aws_secretsmanager_secret.db_slack_metrics_rds_proxy.arn
+  value       = try(aws_secretsmanager_secret.db_slack_metrics_rds_proxy[0].arn, null)
+  description = "RDS Proxy 用シークレット。無効時は null"
 }

@@ -69,3 +69,8 @@ output "role_arn_cp_argocd_image_updater" {
 output "role_arn_cp_k8s_log_transfer" {
   value = aws_iam_role.cp_k8s_log_transfer.arn
 }
+
+output "role_arn_step_functions_practice" {
+  value       = aws_iam_role.step_functions_practice.arn
+  description = "Step Functions 学習用ステートマシンに割り当てる実行ロール"
+}

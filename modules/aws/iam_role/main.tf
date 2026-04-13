@@ -616,3 +616,23 @@ resource "aws_iam_role_policy_attachment" "github_actions_oidc" {
   role       = aws_iam_role.github_actions_oidc.name
   policy_arn = each.value
 }
+
+/************************************************************
+Step Functions 学習用（ステートマシン実行ロール。初回はポリシー未付与）
+************************************************************/
+resource "aws_iam_role" "step_functions_practice" {
+  name = "step-functions-practice-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}

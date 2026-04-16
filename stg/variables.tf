@@ -14,4 +14,7 @@ locals {
 
   # slack-metrics-api Lambda（コンテナ）のイメージタグ。import 前にコンソールまたは ECR の実タグに合わせる
   slack_metrics_lambda_image_tag = "c5029c5"
+
+  # Step Functions 学習用 practice-lambda-calculate。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
+  practice_lambda_calculate_image_tag = "146aa7d"
 }

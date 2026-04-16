@@ -195,19 +195,6 @@ module "rds" {
   db_security_group_id = module.security_group.id_db
 }
 
-# コスト削減・学習用途: Lambda → RDS 直繋ぎのため RDS Proxy は使わない
-# module "rds_proxy" {
-#   source = "../modules/aws/rds_proxy"
-#
-#   env                         = local.env
-#   db_proxy_name               = "cloud-pratica-${local.env}"
-#   vpc_subnet_ids              = module.subnet.private_subnet_ids
-#   rds_proxy_security_group_id = module.security_group.id_rds_proxy
-#   secrets_manager_secret_arn  = module.secrets_manager.arn_db_slack_metrics_rds_proxy
-#   iam_role_arn_rds_proxy      = module.iam_role.role_arn_cp_rds_proxy
-#   db_instance_identifier      = "cloud-pratica-${local.env}"
-# }
-
 module "ecs" {
   source = "../modules/aws/ecs"
   env    = local.env
@@ -266,6 +253,11 @@ module "lambda" {
     image_uri         = "${module.ecr.url_slack_metrics_lambda}:${local.slack_metrics_lambda_image_tag}"
     security_group_id = module.security_group.id_slack_metrics_lambda
     sqs_arn           = module.sqs.arn_slack_metrics
+  }
+
+  practice_lambda_calculate = {
+    role_arn  = module.iam_role.role_arn_practice_lambda_calculate
+    image_uri = "${module.ecr.url_practice_lambda_calculate}:${local.practice_lambda_calculate_image_tag}"
   }
 }
 
@@ -377,5 +369,10 @@ module "ssm_parameter" {
   sg_id_slack_metrics_backend = module.security_group.id_slack_metrics_backend
   sg_id_db_migrator           = module.security_group.id_db_migrator
   tg_arn_slack_metrics_api    = module.target_group.arn_slack_metrics_api
+}
+
+moved {
+  from = aws_iam_role_policy.cp_rds_proxy_secrets
+  to   = module.iam_role.aws_iam_role_policy.cp_rds_proxy_secrets[0]
 }
 

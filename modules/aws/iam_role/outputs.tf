@@ -71,6 +71,9 @@ output "role_arn_cp_k8s_log_transfer" {
 }
 
 output "role_arn_step_functions_practice" {
-  value       = aws_iam_role.step_functions_practice.arn
-  description = "Step Functions 学習用ステートマシンに割り当てる実行ロール"
+  value = aws_iam_role.step_functions_practice.arn
+}
+
+output "role_arn_practice_lambda_calculate" {
+  value = aws_iam_role.practice_lambda_calculate.arn
 }

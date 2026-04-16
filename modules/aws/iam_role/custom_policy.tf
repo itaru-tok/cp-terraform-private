@@ -252,6 +252,25 @@ resource "aws_iam_policy" "cp_k8s_log_transfer" {
 }
 
 /************************************************************
+Step Functions practice → practice-lambda-calculate を起動
+************************************************************/
+resource "aws_iam_policy" "step_functions_practice_invoke_practice_lambda_calculate" {
+  name = "step-functions-practice-invoke-practice-lambda-calculate-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = "arn:aws:lambda:${var.region}:${var.account_id}:function:practice-lambda-calculate-${var.env}"
+      }
+    ]
+  })
+}
+
+/************************************************************
 GitHub Actions
 ************************************************************/
 resource "aws_iam_policy" "github_actions" {
@@ -288,7 +307,8 @@ resource "aws_iam_policy" "github_actions" {
         Resource = [
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-${var.env}",
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-lambda-${var.env}",
-          "arn:aws:ecr:${var.region}:${var.account_id}:repository/db-migrator-${var.env}"
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/db-migrator-${var.env}",
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/practice-lambda-calculate-${var.env}"
         ]
       },
       {

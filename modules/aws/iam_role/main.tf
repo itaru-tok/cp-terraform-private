@@ -99,7 +99,9 @@ resource "aws_iam_role" "cp_rds_proxy" {
 }
 
 resource "aws_iam_role_policy" "cp_rds_proxy_secrets" {
-  count = var.rds_proxy_secret_arn != "" ? 1 : 0
+  # RDS Proxy + Secrets を使うときだけ ARN を渡す。空・空白・null のときは作らない
+  # （coalesce("", "") は Terraform でエラーになるため trimspace + try を使う）
+  count = length(trimspace(try(var.rds_proxy_secret_arn, ""))) > 0 ? 1 : 0
 
   name = "rds-proxy-read-db-slack-metrics-secret"
   role = aws_iam_role.cp_rds_proxy.id
@@ -618,7 +620,7 @@ resource "aws_iam_role_policy_attachment" "github_actions_oidc" {
 }
 
 /************************************************************
-Step Functions 学習用（ステートマシン実行ロール。初回はポリシー未付与）
+Step Functions 学習用（ステートマシン実行ロール）
 ************************************************************/
 resource "aws_iam_role" "step_functions_practice" {
   name = "step-functions-practice-${var.env}"
@@ -635,4 +637,38 @@ resource "aws_iam_role" "step_functions_practice" {
       }
     ]
   })
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_practice_invoke_lambda" {
+  role       = aws_iam_role.step_functions_practice.name
+  policy_arn = aws_iam_policy.step_functions_practice_invoke_practice_lambda_calculate.arn
+}
+
+/************************************************************
+practice-lambda-calculate（Step Functions 学習用 Calculate Lambda）
+************************************************************/
+resource "aws_iam_role" "practice_lambda_calculate" {
+  name = "practice-lambda-calculate-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "practice_lambda_calculate" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.practice_lambda_calculate.name
+  policy_arn = each.value
 }

@@ -13,5 +13,5 @@ variable "account_id" {
 variable "rds_proxy_secret_arn" {
   type        = string
   default     = ""
-  description = "module.secrets_manager の db_slack_metrics_rds_proxy ARN。空なら cp-rds-proxy 用 Secrets 読み取りポリシーは作らない"
+  description = "RDS Proxy 利用時のみ: Secrets Manager の ARN（例: db_slack_metrics_rds_proxy）。空なら cp-rds-proxy 用インラインポリシーは作らない"
 }

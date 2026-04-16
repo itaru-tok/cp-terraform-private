@@ -1,3 +1,14 @@
+resource "aws_lambda_function" "practice_lambda_calculate" {
+  count = var.practice_lambda_calculate != null ? 1 : 0
+
+  function_name = "practice-lambda-calculate-${var.env}"
+  role          = var.practice_lambda_calculate.role_arn
+  image_uri     = var.practice_lambda_calculate.image_uri
+  package_type  = "Image"
+  description   = "Step Functions 学習用の Calculate Lambda（コンテナ）"
+  timeout       = 60
+}
+
 resource "aws_lambda_function" "slack_metrics_api" {
   function_name = "slack-metrics-api-${var.env}"
   role          = var.slack_metrics.role_arn

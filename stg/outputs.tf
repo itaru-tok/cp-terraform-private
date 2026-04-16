@@ -13,3 +13,13 @@ output "role_arn_cp_k8s_log_transfer" {
   value       = module.iam_role.role_arn_cp_k8s_log_transfer
   description = "Fluent Bit（aws-for-fluent-bit）用 EKS Pod Identity IAM ロール ARN"
 }
+
+output "practice_lambda_calculate_arn" {
+  value       = module.lambda.arn_practice_lambda_calculate
+  description = "Step Functions 学習用 practice-lambda-calculate の Lambda ARN"
+}
+
+output "role_arn_step_functions_practice" {
+  value       = module.iam_role.role_arn_step_functions_practice
+  description = "Step Functions 学習用ステートマシンの実行ロール ARN"
+}

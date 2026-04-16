@@ -24,3 +24,12 @@ variable "slack_metrics" {
     sqs_arn           = optional(string)
   })
 }
+
+variable "practice_lambda_calculate" {
+  type = object({
+    role_arn  = string
+    image_uri = string
+  })
+  default     = null
+  description = "Step Functions 学習用 Calculate Lambda（コンテナ）。null のときリソースを作らない"
+}

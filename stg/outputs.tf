@@ -23,3 +23,8 @@ output "role_arn_step_functions_practice" {
   value       = module.iam_role.role_arn_step_functions_practice
   description = "Step Functions 学習用ステートマシンの実行ロール ARN"
 }
+
+output "s3_bucket_id_media_compressor" {
+  value       = module.s3.s3_bucket_id_media_compressor
+  description = "media-compressor 用の S3 バケット名"
+}

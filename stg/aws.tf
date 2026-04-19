@@ -59,6 +59,9 @@ module "s3" {
   slack_metrics = {
     cloudfront_distribution_arn = module.cloudfront.distribution_arn
   }
+  media_compressor = {
+    enabled = true
+  }
 }
 
 module "cloudfront" {
@@ -375,4 +378,3 @@ moved {
   from = aws_iam_role_policy.cp_rds_proxy_secrets
   to   = module.iam_role.aws_iam_role_policy.cp_rds_proxy_secrets[0]
 }
-

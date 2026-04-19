@@ -264,7 +264,8 @@ resource "aws_iam_policy" "step_functions_practice_invoke_practice_lambda_calcul
         Action = [
           "lambda:InvokeFunction"
         ]
-        Resource = "arn:aws:lambda:${var.region}:${var.account_id}:function:practice-lambda-calculate-${var.env}"
+        # ステート定義が function:...:$LATEST のようにバージョン付き ARN になるため、末尾 :* で全バージョン・エイリアスを許可
+        Resource = "arn:aws:lambda:${var.region}:${var.account_id}:function:practice-lambda-calculate-${var.env}:*"
       }
     ]
   })

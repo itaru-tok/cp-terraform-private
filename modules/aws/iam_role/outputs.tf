@@ -74,6 +74,10 @@ output "role_arn_step_functions_practice" {
   value = aws_iam_role.step_functions_practice.arn
 }
 
+output "role_arn_step_functions_media_compressor" {
+  value = aws_iam_role.step_functions_media_compressor.arn
+}
+
 output "role_arn_practice_lambda_calculate" {
   value = aws_iam_role.practice_lambda_calculate.arn
 }

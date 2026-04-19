@@ -655,6 +655,41 @@ resource "aws_iam_role_policy_attachment" "step_functions_practice_pass_role_to_
 }
 
 /************************************************************
+media-compressor（Step Functions 実行ロール）
+************************************************************/
+resource "aws_iam_role" "step_functions_media_compressor" {
+  name = "step-functions-media-compressor-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_media_compressor_invoke_lambda" {
+  role       = aws_iam_role.step_functions_media_compressor.name
+  policy_arn = aws_iam_policy.step_functions_media_compressor_invoke_lambda.arn
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_media_compressor_ecs_write" {
+  role       = aws_iam_role.step_functions_media_compressor.name
+  policy_arn = aws_iam_policy.step_functions_media_compressor_ecs_write.arn
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_media_compressor_pass_role_to_ecs_task" {
+  role       = aws_iam_role.step_functions_media_compressor.name
+  policy_arn = aws_iam_policy.step_functions_media_compressor_pass_role_to_ecs_task.arn
+}
+
+/************************************************************
 practice-lambda-calculate（Step Functions 学習用 Calculate Lambda）
 ************************************************************/
 resource "aws_iam_role" "practice_lambda_calculate" {

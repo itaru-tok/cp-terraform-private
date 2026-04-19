@@ -358,6 +358,73 @@ resource "aws_iam_policy" "step_functions_practice_pass_role_to_ecs_task" {
 }
 
 /************************************************************
+Step Functions media-compressor → Lambda Invoke
+************************************************************/
+resource "aws_iam_policy" "step_functions_media_compressor_invoke_lambda" {
+  name = "step-functions-media-compressor-invoke-lambda-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
+Step Functions media-compressor → ECS
+実行対象のタスク定義・クラスターは後続の実装で絞り込めるように、いったん汎用で許可
+************************************************************/
+resource "aws_iam_policy" "step_functions_media_compressor_ecs_write" {
+  name = "step-functions-media-compressor-ecs-write-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:RunTask",
+          "ecs:DescribeTaskDefinition",
+          "ecs:DescribeClusters",
+          "ecs:StopTask",
+          "ecs:DescribeTasks",
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
+Step Functions media-compressor → ECS タスクへの iam:PassRole
+************************************************************/
+resource "aws_iam_policy" "step_functions_media_compressor_pass_role_to_ecs_task" {
+  name = "step-functions-media-compressor-pass-role-to-ecs-task-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole",
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = "ecs-tasks.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+}
+
+/************************************************************
 GitHub Actions
 ************************************************************/
 resource "aws_iam_policy" "github_actions" {

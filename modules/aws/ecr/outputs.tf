@@ -21,3 +21,7 @@ output "url_practice_ecs_calculate" {
 output "url_media_compressor_compress_image" {
   value = module.ecr_media_compressor_compress_image.repository_url
 }
+
+output "url_media_compressor_compress_video" {
+  value = module.ecr_media_compressor_compress_video.repository_url
+}

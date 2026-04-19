@@ -749,6 +749,37 @@ resource "aws_iam_role_policy_attachment" "media_compressor_compress_image" {
 }
 
 /************************************************************
+media-compressor-compress-video（ECS タスクロール）
+************************************************************/
+resource "aws_iam_role" "media_compressor_compress_video" {
+  name = "media-compressor-compress-video-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_compress_video" {
+  for_each = {
+    cloudwatch       = aws_iam_policy.cloud_watch_logs_write.arn
+    s3               = aws_iam_policy.media_compressor_compress_video_s3.arn
+    step_fn_callback = aws_iam_policy.media_compressor_compress_video_step_functions_callback.arn
+  }
+
+  role       = aws_iam_role.media_compressor_compress_video.name
+  policy_arn = each.value
+}
+
+/************************************************************
 practice-ecs-calculate（Step Functions 学習用 Calculate ECS タスクロール）
 ************************************************************/
 resource "aws_iam_role" "practice_ecs_calculate" {

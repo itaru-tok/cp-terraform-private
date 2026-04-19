@@ -25,3 +25,7 @@ output "id_db_migrator" {
 output "id_db" {
   value = aws_security_group.db.id
 }
+
+output "id_media_compressor_compress_video" {
+  value = aws_security_group.media_compressor_compress_video.id
+}

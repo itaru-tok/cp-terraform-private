@@ -61,6 +61,15 @@ resource "aws_security_group" "slack_metrics_lambda" {
   }
 }
 
+resource "aws_security_group" "media_compressor_compress_video" {
+  name        = "cp-media-compressor-compress-video-${var.env}"
+  description = "media-compressor compress-video ecs task sg"
+  vpc_id      = var.vpc_id
+  tags = {
+    Name = "cp-media-compressor-compress-video-${var.env}"
+  }
+}
+
 # --- Inbound Rules ---
 
 # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にstg/prdのコンソールから直接設定済み）
@@ -129,6 +138,12 @@ resource "aws_vpc_security_group_egress_rule" "db" {
 
 resource "aws_vpc_security_group_egress_rule" "slack_metrics_lambda" {
   security_group_id = aws_security_group.slack_metrics_lambda.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "media_compressor_compress_video" {
+  security_group_id = aws_security_group.media_compressor_compress_video.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }

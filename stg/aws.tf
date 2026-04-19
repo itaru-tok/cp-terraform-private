@@ -219,12 +219,14 @@ module "ecs_task_definition" {
 
   env = local.env
 
-  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:0d0d629" # CI/CD update target
-  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
+  ecr_url_slack_metrics                   = "${module.ecr.url_slack_metrics}:0d0d629" # CI/CD update target
+  ecr_url_db_migrator                     = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
+  ecr_url_media_compressor_compress_video = "${module.ecr.url_media_compressor_compress_video}:${local.media_compressor_compress_video_image_tag}"
 
-  ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
-  ecs_task_role_arn_slack_metrics = module.iam_role.role_arn_cp_slack_metrics_backend
-  ecs_task_role_arn_db_migrator   = module.iam_role.role_arn_cp_db_migrator
+  ecs_task_execution_role_arn                       = module.iam_role.role_arn_ecs_task_execution
+  ecs_task_role_arn_slack_metrics                   = module.iam_role.role_arn_cp_slack_metrics_backend
+  ecs_task_role_arn_db_migrator                     = module.iam_role.role_arn_cp_db_migrator
+  ecs_task_role_arn_media_compressor_compress_video = module.iam_role.role_arn_media_compressor_compress_video
 
   secrets_manager_arn_db_main_instance = module.secrets_manager.arn_db_main_instance
   arn_cp_config_bucket                 = module.s3.s3_bucket_arn_cp_config
@@ -241,6 +243,10 @@ module "ecs_task_definition" {
     db_migrator = {
       cpu    = 256
       memory = 512
+    }
+    media_compressor_compress_video = {
+      cpu    = 2048
+      memory = 4096
     }
   }
 }

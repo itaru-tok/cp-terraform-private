@@ -38,3 +38,13 @@ output "lambda_arn_media_compressor_compress_image" {
   value       = module.lambda.arn_media_compressor_compress_image
   description = "media-compressor-compress-image Lambda ARN"
 }
+
+output "ecr_url_media_compressor_compress_video" {
+  value       = module.ecr.url_media_compressor_compress_video
+  description = "media-compressor-compress-video 用 ECR リポジトリ URL"
+}
+
+output "ecs_task_definition_arn_media_compressor_compress_video" {
+  value       = module.ecs_task_definition.arn_media_compressor_compress_video
+  description = "media-compressor-compress-video ECS task definition ARN"
+}

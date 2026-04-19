@@ -29,3 +29,8 @@ module "ecr_media_compressor_compress_image" {
   source = "../ecr_unit"
   name   = "media-compressor-compress-image-${var.env}"
 }
+
+module "ecr_media_compressor_compress_video" {
+  source = "../ecr_unit"
+  name   = "media-compressor-compress-video-${var.env}"
+}

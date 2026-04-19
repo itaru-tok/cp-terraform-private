@@ -445,6 +445,47 @@ resource "aws_iam_policy" "media_compressor_compress_image_s3" {
 }
 
 /************************************************************
+media-compressor-compress-video → S3 Read/Write
+************************************************************/
+resource "aws_iam_policy" "media_compressor_compress_video_s3" {
+  name = "media-compressor-compress-video-s3-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+        ]
+        Resource = length(trimspace(var.media_compressor_bucket_arn)) > 0 ? "${var.media_compressor_bucket_arn}/*" : "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
+media-compressor-compress-video → Step Functions Callback API
+************************************************************/
+resource "aws_iam_policy" "media_compressor_compress_video_step_functions_callback" {
+  name = "media-compressor-compress-video-step-functions-callback-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "states:SendTaskSuccess",
+          "states:SendTaskFailure",
+          "states:SendTaskHeartbeat",
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
 GitHub Actions
 ************************************************************/
 resource "aws_iam_policy" "github_actions" {

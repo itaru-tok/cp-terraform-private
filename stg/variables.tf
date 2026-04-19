@@ -20,4 +20,7 @@ locals {
 
   # media-compressor-compress-image。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
   media_compressor_compress_image_image_tag = "f020be2"
+
+  # media-compressor-compress-video。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
+  media_compressor_compress_video_image_tag = "f020be2"
 }

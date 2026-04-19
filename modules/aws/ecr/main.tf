@@ -18,3 +18,9 @@ module "ecr_practice_lambda_calculate" {
   source = "../ecr_unit"
   name   = "practice-lambda-calculate-${var.env}"
 }
+
+// Step Functions 学習用（practice / Calculate ECS タスク コンテナ）
+module "ecr_practice_ecs_calculate" {
+  source = "../ecr_unit"
+  name   = "practice-ecs-calculate-${var.env}"
+}

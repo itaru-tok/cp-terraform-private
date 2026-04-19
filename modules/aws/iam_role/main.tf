@@ -508,7 +508,7 @@ resource "aws_iam_role" "cp_scheduler_slack_metrics" {
 resource "aws_iam_role_policy_attachment" "cp_scheduler_slack_metrics" {
   for_each = {
     ecs_run_task          = aws_iam_policy.ecs_run_task.arn
-    pass_role_to_ecs_task = aws_iam_policy.pass_role_to_ecs_task.arn
+    pass_role_to_ecs_task = aws_iam_policy.cp_scheduler_slack_metrics_pass_role_ecs.arn
     invoke_batch_lambda   = aws_iam_policy.scheduler_invoke_slack_metrics_batch_lambda.arn
   }
 
@@ -538,7 +538,7 @@ resource "aws_iam_role" "cp_scheduler_cost_cutter" {
 
 resource "aws_iam_role_policy_attachment" "cp_scheduler_cost_cutter" {
   for_each = {
-    ecs = aws_iam_policy.ecs_write.arn
+    ecs = aws_iam_policy.cp_scheduler_cost_cutter_ecs_write.arn
     rds = aws_iam_policy.rds_start_stop.arn
     ec2 = aws_iam_policy.ec2_start_stop.arn
   }
@@ -644,6 +644,16 @@ resource "aws_iam_role_policy_attachment" "step_functions_practice_invoke_lambda
   policy_arn = aws_iam_policy.step_functions_practice_invoke_practice_lambda_calculate.arn
 }
 
+resource "aws_iam_role_policy_attachment" "step_functions_practice_ecs_write" {
+  role       = aws_iam_role.step_functions_practice.name
+  policy_arn = aws_iam_policy.step_functions_practice_ecs_write.arn
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_practice_pass_role_to_ecs_task" {
+  role       = aws_iam_role.step_functions_practice.name
+  policy_arn = aws_iam_policy.step_functions_practice_pass_role_to_ecs_task.arn
+}
+
 /************************************************************
 practice-lambda-calculate（Step Functions 学習用 Calculate Lambda）
 ************************************************************/
@@ -670,5 +680,35 @@ resource "aws_iam_role_policy_attachment" "practice_lambda_calculate" {
   }
 
   role       = aws_iam_role.practice_lambda_calculate.name
+  policy_arn = each.value
+}
+
+/************************************************************
+practice-ecs-calculate（Step Functions 学習用 Calculate ECS タスクロール）
+************************************************************/
+resource "aws_iam_role" "practice_ecs_calculate" {
+  name = "practice-ecs-calculate-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "practice_ecs_calculate" {
+  for_each = {
+    cloudwatch       = aws_iam_policy.cloud_watch_logs_write.arn
+    step_fn_callback = aws_iam_policy.practice_ecs_calculate_step_functions_callback.arn
+  }
+
+  role       = aws_iam_role.practice_ecs_calculate.name
   policy_arn = each.value
 }

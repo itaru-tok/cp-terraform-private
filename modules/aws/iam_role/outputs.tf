@@ -77,3 +77,7 @@ output "role_arn_step_functions_practice" {
 output "role_arn_practice_lambda_calculate" {
   value = aws_iam_role.practice_lambda_calculate.arn
 }
+
+output "role_arn_practice_ecs_calculate" {
+  value = aws_iam_role.practice_ecs_calculate.arn
+}

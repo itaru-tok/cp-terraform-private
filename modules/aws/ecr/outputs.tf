@@ -13,3 +13,7 @@ output "url_slack_metrics_lambda" {
 output "url_practice_lambda_calculate" {
   value = module.ecr_practice_lambda_calculate.repository_url
 }
+
+output "url_practice_ecs_calculate" {
+  value = module.ecr_practice_ecs_calculate.repository_url
+}

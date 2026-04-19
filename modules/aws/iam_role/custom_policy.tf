@@ -147,10 +147,11 @@ resource "aws_iam_policy" "ecs_run_task" {
 }
 
 /************************************************************
-PassRole to ECS Task
+cp-scheduler-slack-metrics → ECS RunTask 用 PassRole
+（顧客管理ポリシー名は Step Functions 用の pass-role-to-ecs-task-${var.env} と別名）
 ************************************************************/
-resource "aws_iam_policy" "pass_role_to_ecs_task" {
-  name = "pass-role-to-ecs-task-${var.env}"
+resource "aws_iam_policy" "cp_scheduler_slack_metrics_pass_role_ecs" {
+  name = "cp-scheduler-slack-metrics-pass-role-ecs-${var.env}"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -169,10 +170,11 @@ resource "aws_iam_policy" "pass_role_to_ecs_task" {
 }
 
 /************************************************************
-ECS Write
+cp-scheduler-cost-cutter → ECS
+（顧客管理ポリシー名は Step Functions 用の ecs-write-${var.env} と別名）
 ************************************************************/
-resource "aws_iam_policy" "ecs_write" {
-  name = "ecs-write-${var.env}"
+resource "aws_iam_policy" "cp_scheduler_cost_cutter_ecs_write" {
+  name = "cp-scheduler-cost-cutter-ecs-write-${var.env}"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -252,6 +254,28 @@ resource "aws_iam_policy" "cp_k8s_log_transfer" {
 }
 
 /************************************************************
+practice-ecs-calculate（ECS タスクロール）→ Step Functions Callback API
+************************************************************/
+resource "aws_iam_policy" "practice_ecs_calculate_step_functions_callback" {
+  name = "practice-ecs-calculate-step-functions-callback-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "states:SendTaskSuccess",
+          "states:SendTaskFailure",
+          "states:SendTaskHeartbeat",
+        ]
+        # タスクトークンで実行が特定されるため Resource は *（AWS 推奨パターン）
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
 Step Functions practice → practice-lambda-calculate を起動
 ************************************************************/
 resource "aws_iam_policy" "step_functions_practice_invoke_practice_lambda_calculate" {
@@ -266,6 +290,68 @@ resource "aws_iam_policy" "step_functions_practice_invoke_practice_lambda_calcul
         ]
         # ステート定義が function:...:$LATEST のようにバージョン付き ARN になるため、末尾 :* で全バージョン・エイリアスを許可
         Resource = "arn:aws:lambda:${var.region}:${var.account_id}:function:practice-lambda-calculate-${var.env}:*"
+      }
+    ]
+  })
+}
+
+/************************************************************
+Step Functions practice → ECS RunTask（学習用 practice-ecs-calculate）
+************************************************************/
+resource "aws_iam_policy" "step_functions_practice_ecs_write" {
+  name = "ecs-write-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:RunTask",
+          "ecs:DescribeTaskDefinition",
+        ]
+        Resource = "arn:aws:ecs:${var.region}:${var.account_id}:task-definition/practice-ecs-calculate-${var.env}:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:DescribeClusters",
+        ]
+        Resource = "arn:aws:ecs:${var.region}:${var.account_id}:cluster/cloud-pratica-backend-${var.env}"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:StopTask",
+          "ecs:DescribeTasks",
+        ]
+        Resource = "arn:aws:ecs:${var.region}:${var.account_id}:task/cloud-pratica-backend-${var.env}/*"
+      },
+    ]
+  })
+}
+
+/************************************************************
+Step Functions practice → ECS タスクへの iam:PassRole
+************************************************************/
+resource "aws_iam_policy" "step_functions_practice_pass_role_to_ecs_task" {
+  name = "pass-role-to-ecs-task-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole",
+        ]
+        Resource = [
+          aws_iam_role.ecs_task_execution.arn,
+          aws_iam_role.practice_ecs_calculate.arn,
+        ]
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = "ecs-tasks.amazonaws.com"
+          }
+        }
       }
     ]
   })
@@ -309,7 +395,8 @@ resource "aws_iam_policy" "github_actions" {
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-${var.env}",
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-lambda-${var.env}",
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/db-migrator-${var.env}",
-          "arn:aws:ecr:${var.region}:${var.account_id}:repository/practice-lambda-calculate-${var.env}"
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/practice-lambda-calculate-${var.env}",
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/practice-ecs-calculate-${var.env}"
         ]
       },
       {

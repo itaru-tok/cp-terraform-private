@@ -719,6 +719,36 @@ resource "aws_iam_role_policy_attachment" "practice_lambda_calculate" {
 }
 
 /************************************************************
+media-compressor-compress-image（Lambda）
+************************************************************/
+resource "aws_iam_role" "media_compressor_compress_image" {
+  name = "media-compressor-compress-image-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_compress_image" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+    s3         = aws_iam_policy.media_compressor_compress_image_s3.arn
+  }
+
+  role       = aws_iam_role.media_compressor_compress_image.name
+  policy_arn = each.value
+}
+
+/************************************************************
 practice-ecs-calculate（Step Functions 学習用 Calculate ECS タスクロール）
 ************************************************************/
 resource "aws_iam_role" "practice_ecs_calculate" {

@@ -17,4 +17,7 @@ locals {
 
   # Step Functions 学習用 practice-lambda-calculate。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
   practice_lambda_calculate_image_tag = "146aa7d"
+
+  # media-compressor-compress-image。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
+  media_compressor_compress_image_image_tag = "f020be2"
 }

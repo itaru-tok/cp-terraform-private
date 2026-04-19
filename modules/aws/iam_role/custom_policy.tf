@@ -425,6 +425,26 @@ resource "aws_iam_policy" "step_functions_media_compressor_pass_role_to_ecs_task
 }
 
 /************************************************************
+media-compressor-compress-image → S3 Read/Write
+************************************************************/
+resource "aws_iam_policy" "media_compressor_compress_image_s3" {
+  name = "media-compressor-compress-image-s3-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+        ]
+        Resource = length(trimspace(var.media_compressor_bucket_arn)) > 0 ? "${var.media_compressor_bucket_arn}/*" : "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
 GitHub Actions
 ************************************************************/
 resource "aws_iam_policy" "github_actions" {

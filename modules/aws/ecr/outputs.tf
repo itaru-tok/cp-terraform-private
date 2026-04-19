@@ -17,3 +17,7 @@ output "url_practice_lambda_calculate" {
 output "url_practice_ecs_calculate" {
   value = module.ecr_practice_ecs_calculate.repository_url
 }
+
+output "url_media_compressor_compress_image" {
+  value = module.ecr_media_compressor_compress_image.repository_url
+}

@@ -28,3 +28,13 @@ output "s3_bucket_id_media_compressor" {
   value       = module.s3.s3_bucket_id_media_compressor
   description = "media-compressor 用の S3 バケット名"
 }
+
+output "ecr_url_media_compressor_compress_image" {
+  value       = module.ecr.url_media_compressor_compress_image
+  description = "media-compressor-compress-image 用 ECR リポジトリ URL"
+}
+
+output "lambda_arn_media_compressor_compress_image" {
+  value       = module.lambda.arn_media_compressor_compress_image
+  description = "media-compressor-compress-image Lambda ARN"
+}

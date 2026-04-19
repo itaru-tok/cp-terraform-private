@@ -92,10 +92,11 @@ module "ses" {
 }
 
 module "iam_role" {
-  source     = "../modules/aws/iam_role"
-  env        = local.env
-  region     = local.region
-  account_id = local.account_id
+  source                      = "../modules/aws/iam_role"
+  env                         = local.env
+  region                      = local.region
+  account_id                  = local.account_id
+  media_compressor_bucket_arn = module.s3.s3_bucket_arn_media_compressor
 }
 
 # MEMO: コスト削減のため
@@ -261,6 +262,11 @@ module "lambda" {
   practice_lambda_calculate = {
     role_arn  = module.iam_role.role_arn_practice_lambda_calculate
     image_uri = "${module.ecr.url_practice_lambda_calculate}:${local.practice_lambda_calculate_image_tag}"
+  }
+
+  media_compressor_compress_image = {
+    role_arn  = module.iam_role.role_arn_media_compressor_compress_image
+    image_uri = "${module.ecr.url_media_compressor_compress_image}:${local.media_compressor_compress_image_image_tag}"
   }
 }
 

@@ -9,6 +9,28 @@ resource "aws_lambda_function" "practice_lambda_calculate" {
   timeout       = 60
 }
 
+resource "aws_lambda_function" "media_compressor_compress_image" {
+  count = var.media_compressor_compress_image != null ? 1 : 0
+
+  function_name = "media-compressor-compress-image-${var.env}"
+  role          = var.media_compressor_compress_image.role_arn
+  image_uri     = var.media_compressor_compress_image.image_uri
+  package_type  = "Image"
+  description   = "media-compressor の CompressImage Lambda（コンテナ）"
+  memory_size   = 512
+  timeout       = 300
+
+  environment {
+    variables = {
+      MODE = "lambda"
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [image_uri]
+  }
+}
+
 resource "aws_lambda_function" "slack_metrics_api" {
   function_name = "slack-metrics-api-${var.env}"
   role          = var.slack_metrics.role_arn

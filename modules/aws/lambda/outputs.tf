@@ -6,6 +6,14 @@ output "invoke_arn_practice_lambda_calculate" {
   value = try(aws_lambda_function.practice_lambda_calculate[0].invoke_arn, null)
 }
 
+output "arn_media_compressor_compress_image" {
+  value = try(aws_lambda_function.media_compressor_compress_image[0].arn, null)
+}
+
+output "function_name_media_compressor_compress_image" {
+  value = try(aws_lambda_function.media_compressor_compress_image[0].function_name, null)
+}
+
 output "invoke_arn_slack_metrics_api" {
   value = aws_lambda_function.slack_metrics_api.invoke_arn
 }

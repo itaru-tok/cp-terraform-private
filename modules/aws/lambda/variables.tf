@@ -33,3 +33,12 @@ variable "practice_lambda_calculate" {
   default     = null
   description = "Step Functions 学習用 Calculate Lambda（コンテナ）。null のときリソースを作らない"
 }
+
+variable "media_compressor_compress_image" {
+  type = object({
+    role_arn  = string
+    image_uri = string
+  })
+  default     = null
+  description = "media-compressor の CompressImage Lambda（コンテナ）。null のときリソースを作らない"
+}

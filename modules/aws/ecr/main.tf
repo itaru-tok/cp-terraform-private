@@ -24,3 +24,8 @@ module "ecr_practice_ecs_calculate" {
   source = "../ecr_unit"
   name   = "practice-ecs-calculate-${var.env}"
 }
+
+module "ecr_media_compressor_compress_image" {
+  source = "../ecr_unit"
+  name   = "media-compressor-compress-image-${var.env}"
+}

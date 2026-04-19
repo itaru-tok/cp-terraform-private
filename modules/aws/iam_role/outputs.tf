@@ -82,6 +82,10 @@ output "role_arn_practice_lambda_calculate" {
   value = aws_iam_role.practice_lambda_calculate.arn
 }
 
+output "role_arn_media_compressor_compress_image" {
+  value = aws_iam_role.media_compressor_compress_image.arn
+}
+
 output "role_arn_practice_ecs_calculate" {
   value = aws_iam_role.practice_ecs_calculate.arn
 }

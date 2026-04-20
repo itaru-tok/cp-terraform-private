@@ -57,3 +57,21 @@ resource "aws_ssm_parameter" "tg_arn_slack_metrics_api" {
   type  = "String"
   value = var.tg_arn_slack_metrics_api
 }
+
+resource "aws_ssm_parameter" "slack_metrics" {
+  name  = "slack-metrics-${var.env}"
+  type  = "SecureString"
+  value = "default value"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "slack_bot_token" {
+  name  = "slack-bot-token-${var.env}"
+  type  = "SecureString"
+  value = "managed-in-aws-console"
+  lifecycle {
+    ignore_changes = [value]
+  }
+}

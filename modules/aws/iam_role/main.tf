@@ -1,4 +1,3 @@
-
 /************************************************************
 slack-metrics-backend
 ************************************************************/
@@ -40,6 +39,85 @@ resource "aws_iam_role_policy_attachment" "cp_slack_metrics_backend" {
 
   role       = aws_iam_role.cp_slack_metrics_backend.name
   policy_arn = each.value
+}
+
+/************************************************************
+cp-slack-metrics-lambda（コンテナ Lambda / VPC）
+SES はカリキュラム都合で付与しない。VPC 用に AWSLambdaVPCAccessExecutionRole。
+************************************************************/
+resource "aws_iam_role" "cp_slack_metrics_lambda" {
+  name = "cp-slack-metrics-lambda-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cp_slack_metrics_lambda" {
+  for_each = {
+    cloudwatch      = aws_iam_policy.cloud_watch_logs_write.arn
+    parameter_store = aws_iam_policy.parameter_store_read.arn
+    sqs             = aws_iam_policy.sqs_read_write.arn
+    secrets_manager = aws_iam_policy.secrets_manager_read.arn
+    rds_db_connect  = aws_iam_policy.db_connect.arn
+    vpc_access      = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+    ecr_readonly    = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  }
+
+  role       = aws_iam_role.cp_slack_metrics_lambda.name
+  policy_arn = each.value
+}
+
+/************************************************************
+cp-rds-proxy（RDS Proxy が Secrets Manager の認証情報を読む）
+************************************************************/
+resource "aws_iam_role" "cp_rds_proxy" {
+  name = "cp-rds-proxy-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "rds.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cp_rds_proxy_secrets" {
+  # RDS Proxy + Secrets を使うときだけ ARN を渡す。空・空白・null のときは作らない
+  # （coalesce("", "") は Terraform でエラーになるため trimspace + try を使う）
+  count = length(trimspace(try(var.rds_proxy_secret_arn, ""))) > 0 ? 1 : 0
+
+  name = "rds-proxy-read-db-slack-metrics-secret"
+  role = aws_iam_role.cp_rds_proxy.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = var.rds_proxy_secret_arn
+      }
+    ]
+  })
 }
 
 /************************************************************
@@ -429,7 +507,8 @@ resource "aws_iam_role" "cp_scheduler_slack_metrics" {
 resource "aws_iam_role_policy_attachment" "cp_scheduler_slack_metrics" {
   for_each = {
     ecs_run_task          = aws_iam_policy.ecs_run_task.arn
-    pass_role_to_ecs_task = aws_iam_policy.pass_role_to_ecs_task.arn
+    pass_role_to_ecs_task = aws_iam_policy.cp_scheduler_slack_metrics_pass_role_ecs.arn
+    invoke_batch_lambda   = aws_iam_policy.scheduler_invoke_slack_metrics_batch_lambda.arn
   }
 
   role       = aws_iam_role.cp_scheduler_slack_metrics.name
@@ -458,7 +537,7 @@ resource "aws_iam_role" "cp_scheduler_cost_cutter" {
 
 resource "aws_iam_role_policy_attachment" "cp_scheduler_cost_cutter" {
   for_each = {
-    ecs = aws_iam_policy.ecs_write.arn
+    ecs = aws_iam_policy.cp_scheduler_cost_cutter_ecs_write.arn
     rds = aws_iam_policy.rds_start_stop.arn
     ec2 = aws_iam_policy.ec2_start_stop.arn
   }
@@ -536,5 +615,266 @@ resource "aws_iam_role_policy_attachment" "github_actions_oidc" {
   }
 
   role       = aws_iam_role.github_actions_oidc.name
+  policy_arn = each.value
+}
+
+/************************************************************
+Step Functions 学習用（ステートマシン実行ロール）
+************************************************************/
+resource "aws_iam_role" "step_functions_practice" {
+  name = "step-functions-practice-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_practice_invoke_lambda" {
+  role       = aws_iam_role.step_functions_practice.name
+  policy_arn = aws_iam_policy.step_functions_practice_invoke_practice_lambda_calculate.arn
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_practice_ecs_write" {
+  role       = aws_iam_role.step_functions_practice.name
+  policy_arn = aws_iam_policy.step_functions_practice_ecs_write.arn
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_practice_pass_role_to_ecs_task" {
+  role       = aws_iam_role.step_functions_practice.name
+  policy_arn = aws_iam_policy.step_functions_practice_pass_role_to_ecs_task.arn
+}
+
+/************************************************************
+media-compressor（Step Functions 実行ロール）
+************************************************************/
+resource "aws_iam_role" "step_functions_media_compressor" {
+  name = "step-functions-media-compressor-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_media_compressor_invoke_lambda" {
+  role       = aws_iam_role.step_functions_media_compressor.name
+  policy_arn = aws_iam_policy.step_functions_media_compressor_invoke_lambda.arn
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_media_compressor_ecs_write" {
+  role       = aws_iam_role.step_functions_media_compressor.name
+  policy_arn = aws_iam_policy.step_functions_media_compressor_ecs_write.arn
+}
+
+resource "aws_iam_role_policy_attachment" "step_functions_media_compressor_pass_role_to_ecs_task" {
+  role       = aws_iam_role.step_functions_media_compressor.name
+  policy_arn = aws_iam_policy.step_functions_media_compressor_pass_role_to_ecs_task.arn
+}
+
+/************************************************************
+practice-lambda-calculate（Step Functions 学習用 Calculate Lambda）
+************************************************************/
+resource "aws_iam_role" "practice_lambda_calculate" {
+  name = "practice-lambda-calculate-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "practice_lambda_calculate" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.practice_lambda_calculate.name
+  policy_arn = each.value
+}
+
+/************************************************************
+media-compressor-compress-image（Lambda）
+************************************************************/
+resource "aws_iam_role" "media_compressor_compress_image" {
+  name = "media-compressor-compress-image-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_compress_image" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+    s3         = aws_iam_policy.media_compressor_compress_image_s3.arn
+  }
+
+  role       = aws_iam_role.media_compressor_compress_image.name
+  policy_arn = each.value
+}
+
+/************************************************************
+media-compressor-compress-video（ECS タスクロール）
+************************************************************/
+resource "aws_iam_role" "media_compressor_compress_video" {
+  name = "media-compressor-compress-video-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_compress_video" {
+  for_each = {
+    cloudwatch       = aws_iam_policy.cloud_watch_logs_write.arn
+    s3               = aws_iam_policy.media_compressor_compress_video_s3.arn
+    step_fn_callback = aws_iam_policy.media_compressor_compress_video_step_functions_callback.arn
+  }
+
+  role       = aws_iam_role.media_compressor_compress_video.name
+  policy_arn = each.value
+}
+
+/************************************************************
+media-compressor-notify-result（Lambda）
+************************************************************/
+resource "aws_iam_role" "media_compressor_notify_result" {
+  name = "media-compressor-notify-result-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_notify_result" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.media_compressor_notify_result.name
+  policy_arn = each.value
+}
+
+/************************************************************
+media-compressor-invoker（Lambda）
+************************************************************/
+resource "aws_iam_role" "media_compressor_invoker" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+  name  = "media-compressor-invoker-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_invoker_cloudwatch" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+
+  role       = aws_iam_role.media_compressor_invoker[0].name
+  policy_arn = aws_iam_policy.cloud_watch_logs_write.arn
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_invoker_start_execution" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+
+  role       = aws_iam_role.media_compressor_invoker[0].name
+  policy_arn = aws_iam_policy.media_compressor_invoker_start_execution[0].arn
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_invoker_s3_read" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+
+  role       = aws_iam_role.media_compressor_invoker[0].name
+  policy_arn = aws_iam_policy.media_compressor_invoker_s3_read[0].arn
+}
+
+/************************************************************
+practice-ecs-calculate（Step Functions 学習用 Calculate ECS タスクロール）
+************************************************************/
+resource "aws_iam_role" "practice_ecs_calculate" {
+  name = "practice-ecs-calculate-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "practice_ecs_calculate" {
+  for_each = {
+    cloudwatch       = aws_iam_policy.cloud_watch_logs_write.arn
+    step_fn_callback = aws_iam_policy.practice_ecs_calculate_step_functions_callback.arn
+  }
+
+  role       = aws_iam_role.practice_ecs_calculate.name
   policy_arn = each.value
 }

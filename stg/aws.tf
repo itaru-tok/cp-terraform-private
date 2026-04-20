@@ -59,6 +59,9 @@ module "s3" {
   slack_metrics = {
     cloudfront_distribution_arn = module.cloudfront.distribution_arn
   }
+  media_compressor = {
+    enabled = true
+  }
 }
 
 module "cloudfront" {
@@ -89,10 +92,12 @@ module "ses" {
 }
 
 module "iam_role" {
-  source     = "../modules/aws/iam_role"
-  env        = local.env
-  region     = local.region
-  account_id = local.account_id
+  source                             = "../modules/aws/iam_role"
+  env                                = local.env
+  region                             = local.region
+  account_id                         = local.account_id
+  media_compressor_bucket_arn        = module.s3.s3_bucket_arn_media_compressor
+  media_compressor_state_machine_arn = local.media_compressor_state_machine_arn
 }
 
 # MEMO: コスト削減のため
@@ -215,12 +220,14 @@ module "ecs_task_definition" {
 
   env = local.env
 
-  ecr_url_slack_metrics = "${module.ecr.url_slack_metrics}:0d0d629" # CI/CD update target
-  ecr_url_db_migrator   = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
+  ecr_url_slack_metrics                   = "${module.ecr.url_slack_metrics}:0d0d629" # CI/CD update target
+  ecr_url_db_migrator                     = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
+  ecr_url_media_compressor_compress_video = "${module.ecr.url_media_compressor_compress_video}:${local.media_compressor_compress_video_image_tag}"
 
-  ecs_task_execution_role_arn     = module.iam_role.role_arn_ecs_task_execution
-  ecs_task_role_arn_slack_metrics = module.iam_role.role_arn_cp_slack_metrics_backend
-  ecs_task_role_arn_db_migrator   = module.iam_role.role_arn_cp_db_migrator
+  ecs_task_execution_role_arn                       = module.iam_role.role_arn_ecs_task_execution
+  ecs_task_role_arn_slack_metrics                   = module.iam_role.role_arn_cp_slack_metrics_backend
+  ecs_task_role_arn_db_migrator                     = module.iam_role.role_arn_cp_db_migrator
+  ecs_task_role_arn_media_compressor_compress_video = module.iam_role.role_arn_media_compressor_compress_video
 
   secrets_manager_arn_db_main_instance = module.secrets_manager.arn_db_main_instance
   arn_cp_config_bucket                 = module.s3.s3_bucket_arn_cp_config
@@ -238,7 +245,72 @@ module "ecs_task_definition" {
       cpu    = 256
       memory = 512
     }
+    media_compressor_compress_video = {
+      cpu    = 2048
+      memory = 4096
+    }
   }
+}
+
+module "lambda" {
+  source             = "../modules/aws/lambda"
+  env                = local.env
+  aws_account_id     = local.account_id
+  region             = local.region
+  private_subnet_ids = module.subnet.private_subnet_ids
+
+  slack_metrics = {
+    role_arn          = module.iam_role.role_arn_cp_slack_metrics_lambda
+    image_uri         = "${module.ecr.url_slack_metrics_lambda}:${local.slack_metrics_lambda_image_tag}"
+    security_group_id = module.security_group.id_slack_metrics_lambda
+    sqs_arn           = module.sqs.arn_slack_metrics
+  }
+
+  practice_lambda_calculate = {
+    role_arn  = module.iam_role.role_arn_practice_lambda_calculate
+    image_uri = "${module.ecr.url_practice_lambda_calculate}:${local.practice_lambda_calculate_image_tag}"
+  }
+
+  media_compressor_compress_image = {
+    role_arn  = module.iam_role.role_arn_media_compressor_compress_image
+    image_uri = "${module.ecr.url_media_compressor_compress_image}:${local.media_compressor_compress_image_image_tag}"
+  }
+
+  media_compressor_notify_result = {
+    role_arn        = module.iam_role.role_arn_media_compressor_notify_result
+    image_uri       = "${module.ecr.url_media_compressor_notify_result}:${local.media_compressor_notify_result_image_tag}"
+    slack_bot_token = module.ssm_parameter.slack_bot_token
+  }
+
+  media_compressor_invoker = {
+    role_arn          = module.iam_role.role_arn_media_compressor_invoker
+    image_uri         = "${module.ecr.url_media_compressor_invoker}:${local.media_compressor_invoker_image_tag}"
+    state_machine_arn = local.media_compressor_state_machine_arn
+  }
+}
+
+resource "aws_lambda_permission" "media_compressor_s3_invoke_invoker" {
+  count = module.s3.s3_bucket_id_media_compressor != null ? 1 : 0
+
+  statement_id  = "AllowExecutionFromS3MediaCompressor"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda.function_name_media_compressor_invoker
+  principal     = "s3.amazonaws.com"
+  source_arn    = module.s3.s3_bucket_arn_media_compressor
+}
+
+resource "aws_s3_bucket_notification" "media_compressor_invoker" {
+  count = module.s3.s3_bucket_id_media_compressor != null ? 1 : 0
+
+  bucket = module.s3.s3_bucket_id_media_compressor
+
+  lambda_function {
+    lambda_function_arn = module.lambda.arn_media_compressor_invoker
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "input/workspaces/1/"
+  }
+
+  depends_on = [aws_lambda_permission.media_compressor_s3_invoke_invoker]
 }
 
 module "event_bridge_scheduler" {
@@ -251,6 +323,10 @@ module "event_bridge_scheduler" {
     ecs_cluster_arn                          = module.ecs.ecs_cluster_arn_cloud_pratica_backend
     ecs_task_definition_arn_without_revision = module.ecs_task_definition.arn_without_revision_slack_metrics_batch
     security_group_id                        = module.security_group.id_slack_metrics_backend
+  }
+
+  slack_metrics_v3 = {
+    lambda_arn = module.lambda.arn_slack_metrics_batch
   }
 
   cost_cutter = {

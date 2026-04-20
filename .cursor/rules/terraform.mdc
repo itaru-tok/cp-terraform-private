@@ -1,0 +1,30 @@
+---
+description: cp-terraform-private 向け Terraform の方針（モジュール・output・運用の共通ルール）
+alwaysApply: true
+---
+
+# Terraform（このリポジトリ）
+
+Agent は Terraform 関連の変更時、**このファイルに書いた方針に沿う**。細かいトピックごとに `.mdc` を増やさず、**新しい方針はこのファイルへセクション追加**する。
+
+## Root モジュールの `output`
+
+### 追加する条件（いずれかを満たすときだけ）
+
+- 別ディレクトリの Terraform / Terragrunt / 外部ツールから **参照される**（`terraform_remote_state` 等）
+- CI やスクリプトが **`terraform output`** で **必須**で読む
+- 利用者が **明示的に**「root に出してほしい」と依頼した
+
+### 避けること
+
+- 「コンソールでコピーしやすいだけ」「手元確認用」だけの root `output` は **追加しない**
+- 値が **`module.*` からだけ取れる**なら、親の `*.tf` で配線するか、`terraform console` / `state show` / モジュール output で足りる
+
+### モジュール側の `output`
+
+- `modules/**` の `output` は、親が `module.xxx.yyy` で参照する **公開 API** として残してよい
+- root と違い、他スタックが直接読まなくても **親モジュール内での参照**に使うなら意味がある
+
+### メンテナンス
+
+- root `output` を足すときは、リポジトリ内 **参照の有無** を意識する。参照がなく「便利」のみなら足さないか、依頼どおりなら用途をコメントやドキュメントで固定する

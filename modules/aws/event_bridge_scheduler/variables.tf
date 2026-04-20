@@ -23,3 +23,10 @@ variable "cost_cutter" {
     ecs_cluster_arn_cloud_pratica_backend = string
   })
 }
+
+variable "slack_metrics_v3" {
+  type = object({
+    lambda_arn = string
+  })
+  default = null
+}

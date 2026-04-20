@@ -6,9 +6,30 @@ locals {
   ses_mail_from_domain              = "mail.stg.itaru.uk"
   amplify_domain_name_slack_metrics = "develop.d15icriq5um5ws.amplifyapp.com"
 
-  # EKS Pod Identity: クラスター名は EKS コンソールの一覧と一致させる（cloud-pratica-terraform の EKS は cloud-pratica-${env}）
+  # EKS Pod Identity 用（コンソールのクラスター名と一致）
   eks_cluster_name = "cloud-pratica-stg"
 
   # 既存クラスタを import する場合はコンソールのバージョンと一致させる（ずれると plan で差分や置換が出る）
   eks_kubernetes_version = "1.35"
+
+  # slack-metrics-api Lambda（コンテナ）のイメージタグ。import 前にコンソールまたは ECR の実タグに合わせる
+  slack_metrics_lambda_image_tag = "c5029c5"
+
+  # Step Functions 学習用 practice-lambda-calculate。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
+  practice_lambda_calculate_image_tag = "f020be2"
+
+  # media-compressor-compress-image。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
+  media_compressor_compress_image_image_tag = "f020be2"
+
+  # media-compressor-compress-video。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
+  media_compressor_compress_video_image_tag = "f020be2"
+
+  # media-compressor-notify-result。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
+  media_compressor_notify_result_image_tag = "f020be2"
+
+  # media-compressor-invoker。初回は ECR に push したイメージタグに合わせて更新する
+  media_compressor_invoker_image_tag = "f020be2"
+
+  # Step Functions コンソールのステートマシン名と一致させる（例: media-compressor-stg）
+  media_compressor_state_machine_arn = "arn:aws:states:${local.region}:${local.account_id}:stateMachine:media-compressor-${local.env}"
 }

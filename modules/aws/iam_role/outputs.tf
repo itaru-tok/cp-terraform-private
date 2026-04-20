@@ -14,6 +14,18 @@ output "role_arn_cp_slack_metrics_backend" {
   value = aws_iam_role.cp_slack_metrics_backend.arn
 }
 
+output "role_arn_cp_slack_metrics_lambda" {
+  value = aws_iam_role.cp_slack_metrics_lambda.arn
+}
+
+output "role_arn_cp_rds_proxy" {
+  value = aws_iam_role.cp_rds_proxy.arn
+}
+
+output "role_name_cp_rds_proxy" {
+  value = aws_iam_role.cp_rds_proxy.name
+}
+
 output "role_arn_cp_db_migrator" {
   value = aws_iam_role.cp_db_migrator.arn
 }
@@ -56,4 +68,36 @@ output "role_arn_cp_argocd_image_updater" {
 
 output "role_arn_cp_k8s_log_transfer" {
   value = aws_iam_role.cp_k8s_log_transfer.arn
+}
+
+output "role_arn_step_functions_practice" {
+  value = aws_iam_role.step_functions_practice.arn
+}
+
+output "role_arn_step_functions_media_compressor" {
+  value = aws_iam_role.step_functions_media_compressor.arn
+}
+
+output "role_arn_practice_lambda_calculate" {
+  value = aws_iam_role.practice_lambda_calculate.arn
+}
+
+output "role_arn_media_compressor_compress_image" {
+  value = aws_iam_role.media_compressor_compress_image.arn
+}
+
+output "role_arn_media_compressor_compress_video" {
+  value = aws_iam_role.media_compressor_compress_video.arn
+}
+
+output "role_arn_media_compressor_notify_result" {
+  value = aws_iam_role.media_compressor_notify_result.arn
+}
+
+output "role_arn_media_compressor_invoker" {
+  value = try(aws_iam_role.media_compressor_invoker[0].arn, null)
+}
+
+output "role_arn_practice_ecs_calculate" {
+  value = aws_iam_role.practice_ecs_calculate.arn
 }

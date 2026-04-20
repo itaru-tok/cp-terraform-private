@@ -10,3 +10,12 @@ variable "slack_metrics" {
     cloudfront_distribution_arn = null
   }
 }
+
+variable "media_compressor" {
+  type = object({
+    enabled = optional(bool)
+  })
+  default = {
+    enabled = false
+  }
+}

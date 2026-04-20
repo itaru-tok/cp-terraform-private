@@ -16,7 +16,7 @@ locals {
   slack_metrics_lambda_image_tag = "c5029c5"
 
   # Step Functions 学習用 practice-lambda-calculate。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
-  practice_lambda_calculate_image_tag = "146aa7d"
+  practice_lambda_calculate_image_tag = "f020be2"
 
   # media-compressor-compress-image。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
   media_compressor_compress_image_image_tag = "f020be2"
@@ -26,4 +26,10 @@ locals {
 
   # media-compressor-notify-result。`make release-image` の GIT_COMMIT_HASH（短縮）に合わせて更新する
   media_compressor_notify_result_image_tag = "f020be2"
+
+  # media-compressor-invoker。初回は ECR に push したイメージタグに合わせて更新する
+  media_compressor_invoker_image_tag = "f020be2"
+
+  # Step Functions コンソールのステートマシン名と一致させる（例: media-compressor-stg）
+  media_compressor_state_machine_arn = "arn:aws:states:${local.region}:${local.account_id}:stateMachine:media-compressor-${local.env}"
 }

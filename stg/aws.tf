@@ -92,11 +92,12 @@ module "ses" {
 }
 
 module "iam_role" {
-  source                      = "../modules/aws/iam_role"
-  env                         = local.env
-  region                      = local.region
-  account_id                  = local.account_id
-  media_compressor_bucket_arn = module.s3.s3_bucket_arn_media_compressor
+  source                             = "../modules/aws/iam_role"
+  env                                = local.env
+  region                             = local.region
+  account_id                         = local.account_id
+  media_compressor_bucket_arn        = module.s3.s3_bucket_arn_media_compressor
+  media_compressor_state_machine_arn = local.media_compressor_state_machine_arn
 }
 
 # MEMO: コスト削減のため
@@ -280,6 +281,36 @@ module "lambda" {
     image_uri       = "${module.ecr.url_media_compressor_notify_result}:${local.media_compressor_notify_result_image_tag}"
     slack_bot_token = module.ssm_parameter.slack_bot_token
   }
+
+  media_compressor_invoker = {
+    role_arn          = module.iam_role.role_arn_media_compressor_invoker
+    image_uri         = "${module.ecr.url_media_compressor_invoker}:${local.media_compressor_invoker_image_tag}"
+    state_machine_arn = local.media_compressor_state_machine_arn
+  }
+}
+
+resource "aws_lambda_permission" "media_compressor_s3_invoke_invoker" {
+  count = module.s3.s3_bucket_id_media_compressor != null ? 1 : 0
+
+  statement_id  = "AllowExecutionFromS3MediaCompressor"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda.function_name_media_compressor_invoker
+  principal     = "s3.amazonaws.com"
+  source_arn    = module.s3.s3_bucket_arn_media_compressor
+}
+
+resource "aws_s3_bucket_notification" "media_compressor_invoker" {
+  count = module.s3.s3_bucket_id_media_compressor != null ? 1 : 0
+
+  bucket = module.s3.s3_bucket_id_media_compressor
+
+  lambda_function {
+    lambda_function_arn = module.lambda.arn_media_compressor_invoker
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "input/workspaces/1/"
+  }
+
+  depends_on = [aws_lambda_permission.media_compressor_s3_invoke_invoker]
 }
 
 module "event_bridge_scheduler" {

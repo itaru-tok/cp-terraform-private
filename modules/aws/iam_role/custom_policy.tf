@@ -1,3 +1,10 @@
+# Terraform LS がこのモジュールで variables.tf を解決しない場合があるため、ここに 1 回だけ宣言する。
+variable "media_compressor_state_machine_arn" {
+  type        = string
+  default     = ""
+  description = "media-compressor Step Functions のステートマシン ARN。空のとき media-compressor-invoker 用 IAM は作らない"
+}
+
 /************************************************************
 Secrets Manager Read
 ************************************************************/
@@ -486,6 +493,47 @@ resource "aws_iam_policy" "media_compressor_compress_video_step_functions_callba
 }
 
 /************************************************************
+media-compressor-invoker → Step Functions StartExecution
+************************************************************/
+resource "aws_iam_policy" "media_compressor_invoker_start_execution" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+  name  = "media-compressor-invoker-start-execution-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "states:StartExecution"
+        ]
+        Resource = var.media_compressor_state_machine_arn
+      }
+    ]
+  })
+}
+
+/************************************************************
+media-compressor-invoker → S3 入力オブジェクト参照
+************************************************************/
+resource "aws_iam_policy" "media_compressor_invoker_s3_read" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+  name  = "media-compressor-invoker-s3-read-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+        ]
+        Resource = length(trimspace(var.media_compressor_bucket_arn)) > 0 ? "${var.media_compressor_bucket_arn}/*" : "*"
+      }
+    ]
+  })
+}
+
+/************************************************************
 GitHub Actions
 ************************************************************/
 resource "aws_iam_policy" "github_actions" {
@@ -524,7 +572,8 @@ resource "aws_iam_policy" "github_actions" {
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/slack-metrics-lambda-${var.env}",
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/db-migrator-${var.env}",
           "arn:aws:ecr:${var.region}:${var.account_id}:repository/practice-lambda-calculate-${var.env}",
-          "arn:aws:ecr:${var.region}:${var.account_id}:repository/practice-ecs-calculate-${var.env}"
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/practice-ecs-calculate-${var.env}",
+          "arn:aws:ecr:${var.region}:${var.account_id}:repository/media-compressor-invoker-${var.env}"
         ]
       },
       {

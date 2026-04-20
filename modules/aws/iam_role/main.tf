@@ -1,4 +1,3 @@
-
 /************************************************************
 slack-metrics-backend
 ************************************************************/
@@ -806,6 +805,48 @@ resource "aws_iam_role_policy_attachment" "media_compressor_notify_result" {
 
   role       = aws_iam_role.media_compressor_notify_result.name
   policy_arn = each.value
+}
+
+/************************************************************
+media-compressor-invoker（Lambda）
+************************************************************/
+resource "aws_iam_role" "media_compressor_invoker" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+  name  = "media-compressor-invoker-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_invoker_cloudwatch" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+
+  role       = aws_iam_role.media_compressor_invoker[0].name
+  policy_arn = aws_iam_policy.cloud_watch_logs_write.arn
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_invoker_start_execution" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+
+  role       = aws_iam_role.media_compressor_invoker[0].name
+  policy_arn = aws_iam_policy.media_compressor_invoker_start_execution[0].arn
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_invoker_s3_read" {
+  count = length(trimspace(var.media_compressor_state_machine_arn)) > 0 ? 1 : 0
+
+  role       = aws_iam_role.media_compressor_invoker[0].name
+  policy_arn = aws_iam_policy.media_compressor_invoker_s3_read[0].arn
 }
 
 /************************************************************

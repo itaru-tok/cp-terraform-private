@@ -39,3 +39,8 @@ module "ecr_media_compressor_notify_result" {
   source = "../ecr_unit"
   name   = "media-compressor-notify-result-${var.env}"
 }
+
+module "ecr_media_compressor_invoker" {
+  source = "../ecr_unit"
+  name   = "media-compressor-invoker-${var.env}"
+}

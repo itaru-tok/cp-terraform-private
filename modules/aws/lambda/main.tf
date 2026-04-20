@@ -57,6 +57,29 @@ resource "aws_lambda_function" "media_compressor_notify_result" {
   }
 }
 
+resource "aws_lambda_function" "media_compressor_invoker" {
+  count = var.media_compressor_invoker != null ? 1 : 0
+
+  function_name = "media-compressor-invoker-${var.env}"
+  role          = var.media_compressor_invoker.role_arn
+  image_uri     = var.media_compressor_invoker.image_uri
+  package_type  = "Image"
+  description   = "S3 アップロードをトリガーに media-compressor Step Functions を起動する Lambda（コンテナ）"
+  memory_size   = 256
+  timeout       = 60
+
+  environment {
+    variables = {
+      MODE              = "lambda"
+      STATE_MACHINE_ARN = var.media_compressor_invoker.state_machine_arn
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [image_uri]
+  }
+}
+
 resource "aws_lambda_function" "slack_metrics_api" {
   function_name = "slack-metrics-api-${var.env}"
   role          = var.slack_metrics.role_arn

@@ -52,3 +52,13 @@ variable "media_compressor_notify_result" {
   default     = null
   description = "media-compressor の NotifyResult Lambda（コンテナ）。null のときリソースを作らない"
 }
+
+variable "media_compressor_invoker" {
+  type = object({
+    role_arn          = string
+    image_uri         = string
+    state_machine_arn = string
+  })
+  default     = null
+  description = "S3 イベントから media-compressor Step Functions を起動する Invoker Lambda（コンテナ）。null のときリソースを作らない"
+}

@@ -94,6 +94,10 @@ output "role_arn_media_compressor_notify_result" {
   value = aws_iam_role.media_compressor_notify_result.arn
 }
 
+output "role_arn_media_compressor_invoker" {
+  value = try(aws_iam_role.media_compressor_invoker[0].arn, null)
+}
+
 output "role_arn_practice_ecs_calculate" {
   value = aws_iam_role.practice_ecs_calculate.arn
 }

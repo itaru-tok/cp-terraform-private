@@ -42,3 +42,13 @@ variable "media_compressor_compress_image" {
   default     = null
   description = "media-compressor の CompressImage Lambda（コンテナ）。null のときリソースを作らない"
 }
+
+variable "media_compressor_notify_result" {
+  type = object({
+    role_arn        = string
+    image_uri       = string
+    slack_bot_token = string
+  })
+  default     = null
+  description = "media-compressor の NotifyResult Lambda（コンテナ）。null のときリソースを作らない"
+}

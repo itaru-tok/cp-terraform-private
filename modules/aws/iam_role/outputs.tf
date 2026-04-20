@@ -90,6 +90,10 @@ output "role_arn_media_compressor_compress_video" {
   value = aws_iam_role.media_compressor_compress_video.arn
 }
 
+output "role_arn_media_compressor_notify_result" {
+  value = aws_iam_role.media_compressor_notify_result.arn
+}
+
 output "role_arn_practice_ecs_calculate" {
   value = aws_iam_role.practice_ecs_calculate.arn
 }

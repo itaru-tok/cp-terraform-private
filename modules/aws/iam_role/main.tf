@@ -780,6 +780,35 @@ resource "aws_iam_role_policy_attachment" "media_compressor_compress_video" {
 }
 
 /************************************************************
+media-compressor-notify-result（Lambda）
+************************************************************/
+resource "aws_iam_role" "media_compressor_notify_result" {
+  name = "media-compressor-notify-result-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "media_compressor_notify_result" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.media_compressor_notify_result.name
+  policy_arn = each.value
+}
+
+/************************************************************
 practice-ecs-calculate（Step Functions 学習用 Calculate ECS タスクロール）
 ************************************************************/
 resource "aws_iam_role" "practice_ecs_calculate" {

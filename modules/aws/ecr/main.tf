@@ -34,3 +34,8 @@ module "ecr_media_compressor_compress_video" {
   source = "../ecr_unit"
   name   = "media-compressor-compress-video-${var.env}"
 }
+
+module "ecr_media_compressor_notify_result" {
+  source = "../ecr_unit"
+  name   = "media-compressor-notify-result-${var.env}"
+}

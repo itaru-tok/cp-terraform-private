@@ -31,6 +31,32 @@ resource "aws_lambda_function" "media_compressor_compress_image" {
   }
 }
 
+resource "aws_lambda_function" "media_compressor_notify_result" {
+  count = var.media_compressor_notify_result != null ? 1 : 0
+
+  function_name = "media-compressor-notify-result-${var.env}"
+  role          = var.media_compressor_notify_result.role_arn
+  image_uri     = var.media_compressor_notify_result.image_uri
+  package_type  = "Image"
+  description   = "media-compressor の NotifyResult Lambda（コンテナ）"
+  memory_size   = 256
+  timeout       = 60
+
+  environment {
+    variables = {
+      MODE            = "lambda"
+      SLACK_BOT_TOKEN = var.media_compressor_notify_result.slack_bot_token
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      image_uri,
+      environment[0].variables["SLACK_BOT_TOKEN"],
+    ]
+  }
+}
+
 resource "aws_lambda_function" "slack_metrics_api" {
   function_name = "slack-metrics-api-${var.env}"
   role          = var.slack_metrics.role_arn

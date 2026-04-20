@@ -25,3 +25,7 @@ output "url_media_compressor_compress_image" {
 output "url_media_compressor_compress_video" {
   value = module.ecr_media_compressor_compress_video.repository_url
 }
+
+output "url_media_compressor_notify_result" {
+  value = module.ecr_media_compressor_notify_result.repository_url
+}

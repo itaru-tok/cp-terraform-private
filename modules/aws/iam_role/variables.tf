@@ -37,5 +37,5 @@ variable "audit_log_firehose_transform_function_name" {
 variable "slack_metrics_cwl_firehose_delivery_stream_name" {
   type        = string
   default     = ""
-  description = "slack-metrics-api ログの CWL サブスクリプション宛先 Firehose 名。空なら cp-audit-log-firehose-{env}"
+  description = "slack-metrics-api ログの CWL サブスクリプション宛先 Firehose 名。空なら audit-log-slack-metrics-{env}"
 }

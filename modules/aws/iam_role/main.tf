@@ -903,7 +903,7 @@ resource "aws_iam_role" "cp_audit_log_firehose" {
 locals {
   audit_log_firehose_transform_lambda_name = trimspace(var.audit_log_firehose_transform_function_name) != "" ? var.audit_log_firehose_transform_function_name : "cp-audit-log-firehose-transform-${var.env}"
 
-  slack_metrics_cwl_firehose_stream_name = trimspace(var.slack_metrics_cwl_firehose_delivery_stream_name) != "" ? var.slack_metrics_cwl_firehose_delivery_stream_name : "cp-audit-log-firehose-${var.env}"
+  slack_metrics_cwl_firehose_stream_name = trimspace(var.slack_metrics_cwl_firehose_delivery_stream_name) != "" ? var.slack_metrics_cwl_firehose_delivery_stream_name : "audit-log-slack-metrics-${var.env}"
   slack_metrics_cwl_firehose_stream_arn  = "arn:aws:firehose:${var.region}:${var.account_id}:deliverystream/${local.slack_metrics_cwl_firehose_stream_name}"
 }
 
@@ -979,7 +979,9 @@ resource "aws_iam_role_policy" "logs_lambda_slack_metrics_api_firehose" {
           "firehose:PutRecord",
           "firehose:PutRecordBatch",
         ]
-        Resource = local.slack_metrics_cwl_firehose_stream_arn
+        Resource = [
+          local.slack_metrics_cwl_firehose_stream_arn,
+        ]
       }
     ]
   })

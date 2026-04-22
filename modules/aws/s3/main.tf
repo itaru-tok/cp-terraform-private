@@ -24,6 +24,31 @@ module "cp_config" {
   restrict_public_buckets = true
 }
 
+module "audit_log" {
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "4.6.0"
+
+  bucket = "cp-audit-log-itaru-${var.env}"
+
+  versioning = {
+    enabled = true
+  }
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
+      bucket_key_enabled = true
+    }
+  }
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 module "cp_slack_metrics" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "4.6.0"

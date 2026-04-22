@@ -101,3 +101,7 @@ output "role_arn_media_compressor_invoker" {
 output "role_arn_practice_ecs_calculate" {
   value = aws_iam_role.practice_ecs_calculate.arn
 }
+
+output "role_arn_cp_audit_log_firehose" {
+  value = try(aws_iam_role.cp_audit_log_firehose[0].arn, null)
+}

@@ -878,3 +878,67 @@ resource "aws_iam_role_policy_attachment" "practice_ecs_calculate" {
   role       = aws_iam_role.practice_ecs_calculate.name
   policy_arn = each.value
 }
+
+/************************************************************
+cp-audit-log-firehose（CloudWatch Logs → Firehose → S3、将来の Lambda 変換用）
+************************************************************/
+resource "aws_iam_role" "cp_audit_log_firehose" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "cp-audit-log-firehose-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+locals {
+  audit_log_firehose_transform_lambda_name = trimspace(var.audit_log_firehose_transform_function_name) != "" ? var.audit_log_firehose_transform_function_name : "cp-audit-log-firehose-transform-${var.env}"
+}
+
+resource "aws_iam_role_policy" "cp_audit_log_firehose" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "cp-audit-log-firehose-delivery-${var.env}"
+  role  = aws_iam_role.cp_audit_log_firehose[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "S3Delivery"
+        Effect = "Allow"
+        Action = [
+          "s3:AbortMultipartUpload",
+          "s3:GetBucketLocation",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads",
+          "s3:PutObject",
+        ]
+        Resource = [
+          var.audit_log_bucket_arn,
+          "${var.audit_log_bucket_arn}/*",
+        ]
+      },
+      {
+        Sid    = "LambdaTransform"
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction",
+        ]
+        Resource = [
+          "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.audit_log_firehose_transform_lambda_name}",
+          "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.audit_log_firehose_transform_lambda_name}:*",
+        ]
+      },
+    ]
+  })
+}

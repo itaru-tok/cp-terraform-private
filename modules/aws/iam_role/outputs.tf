@@ -105,3 +105,7 @@ output "role_arn_practice_ecs_calculate" {
 output "role_arn_cp_audit_log_firehose" {
   value = try(aws_iam_role.cp_audit_log_firehose[0].arn, null)
 }
+
+output "role_arn_logs_lambda_slack_metrics_api" {
+  value = aws_iam_role.logs_lambda_slack_metrics_api.arn
+}

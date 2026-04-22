@@ -902,6 +902,9 @@ resource "aws_iam_role" "cp_audit_log_firehose" {
 
 locals {
   audit_log_firehose_transform_lambda_name = trimspace(var.audit_log_firehose_transform_function_name) != "" ? var.audit_log_firehose_transform_function_name : "cp-audit-log-firehose-transform-${var.env}"
+
+  slack_metrics_cwl_firehose_stream_name = trimspace(var.slack_metrics_cwl_firehose_delivery_stream_name) != "" ? var.slack_metrics_cwl_firehose_delivery_stream_name : "cp-audit-log-firehose-${var.env}"
+  slack_metrics_cwl_firehose_stream_arn  = "arn:aws:firehose:${var.region}:${var.account_id}:deliverystream/${local.slack_metrics_cwl_firehose_stream_name}"
 }
 
 resource "aws_iam_role_policy" "cp_audit_log_firehose" {
@@ -939,6 +942,45 @@ resource "aws_iam_role_policy" "cp_audit_log_firehose" {
           "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.audit_log_firehose_transform_lambda_name}:*",
         ]
       },
+    ]
+  })
+}
+
+/************************************************************
+logs-lambda-slack-metrics-api（CloudWatch Logs → Firehose サブスクリプション用）
+************************************************************/
+resource "aws_iam_role" "logs_lambda_slack_metrics_api" {
+  name = "logs-lambda-slack-metrics-api-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "logs_lambda_slack_metrics_api_firehose" {
+  name = "logs-lambda-slack-metrics-api-firehose-${var.env}"
+  role = aws_iam_role.logs_lambda_slack_metrics_api.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "firehose:PutRecord",
+          "firehose:PutRecordBatch",
+        ]
+        Resource = local.slack_metrics_cwl_firehose_stream_arn
+      }
     ]
   })
 }

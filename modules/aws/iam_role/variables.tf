@@ -33,3 +33,9 @@ variable "audit_log_firehose_transform_function_name" {
   default     = ""
   description = "Firehose レコード変換用 Lambda の関数名（省略時 cp-audit-log-firehose-transform-{env}）"
 }
+
+variable "slack_metrics_cwl_firehose_delivery_stream_name" {
+  type        = string
+  default     = ""
+  description = "slack-metrics-api ログの CWL サブスクリプション宛先 Firehose 名。空なら cp-audit-log-firehose-{env}"
+}

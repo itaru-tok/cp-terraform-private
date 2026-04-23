@@ -905,6 +905,8 @@ locals {
 
   slack_metrics_cwl_firehose_stream_name = trimspace(var.slack_metrics_cwl_firehose_delivery_stream_name) != "" ? var.slack_metrics_cwl_firehose_delivery_stream_name : "audit-log-slack-metrics-${var.env}"
   slack_metrics_cwl_firehose_stream_arn  = "arn:aws:firehose:${var.region}:${var.account_id}:deliverystream/${local.slack_metrics_cwl_firehose_stream_name}"
+
+  audit_log_glue_database_name = trimspace(var.audit_log_glue_database_name) != "" ? var.audit_log_glue_database_name : "audit_log_${var.env}"
 }
 
 resource "aws_iam_role_policy" "cp_audit_log_firehose" {
@@ -940,6 +942,20 @@ resource "aws_iam_role_policy" "cp_audit_log_firehose" {
         Resource = [
           "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.audit_log_firehose_transform_lambda_name}",
           "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.audit_log_firehose_transform_lambda_name}:*",
+        ]
+      },
+      {
+        Sid    = "GlueTableRead"
+        Effect = "Allow"
+        Action = [
+          "glue:GetTable",
+          "glue:GetTableVersion",
+          "glue:GetTableVersions",
+        ]
+        Resource = [
+          "arn:aws:glue:${var.region}:${var.account_id}:catalog",
+          "arn:aws:glue:${var.region}:${var.account_id}:database/${local.audit_log_glue_database_name}",
+          "arn:aws:glue:${var.region}:${var.account_id}:table/${local.audit_log_glue_database_name}/*",
         ]
       },
     ]

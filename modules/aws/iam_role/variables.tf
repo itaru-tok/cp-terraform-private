@@ -39,3 +39,9 @@ variable "slack_metrics_cwl_firehose_delivery_stream_name" {
   default     = ""
   description = "slack-metrics-api ログの CWL サブスクリプション宛先 Firehose 名。空なら audit-log-slack-metrics-{env}"
 }
+
+variable "audit_log_glue_database_name" {
+  type        = string
+  default     = ""
+  description = "監査ログ Glue Data Catalog のデータベース名（Firehose の Parquet 変換で参照）。空なら audit_log_{env}"
+}

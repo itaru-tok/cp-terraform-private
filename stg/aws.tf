@@ -338,6 +338,38 @@ module "cloudwatch_log_group" {
   }
 }
 
+module "sns" {
+  source = "../modules/aws/sns"
+  env    = local.env
+}
+
+module "cloudwatch_alarm" {
+  source = "../modules/aws/cloudwatch_alarm"
+  env    = local.env
+
+  ntf_alarm_sns_topic_arn = module.sns.arn_ntf_alarm
+
+  server_error_slack_metrics_api = {
+    alarm_description = "【いたる】\nSlack Metrics APIで1分間に10回以上のサーバエラーが発生しました。\n直ちに以下のロググループを確認してください！\n\n```\n/aws/lambda/slack-metrics-api-${local.env}\n```"
+  }
+
+  rds_cpu_cloud_pratica = {
+    alarm_description = "【いたる】\nRDS Cloud Practical StagingインスタンスのCPU使用率が 閾値の70%を超えました。直ちにスペックの調整を行ってください。"
+  }
+}
+
+module "amazon_q_chat" {
+  source = "../modules/aws/amazon_q_chat"
+  env    = local.env
+
+  ntf_alarm = {
+    iam_role_arn     = module.iam_role.role_arn_cp_q_developer
+    sns_topic_arn    = module.sns.arn_ntf_alarm
+    slack_team_id    = "T088SK8B43U"
+    slack_channel_id = "C09C4R1RAUQ"
+  }
+}
+
 # TEMP-IMPORT-DISABLED-START: import 中だけ count 評価を止めるためコメントアウト。import 完了後に必ず戻す
 /*
 # TEMP-IMPORT-DISABLED-START: import 中だけ count 評価を止めるためコメントアウト。import 完了後に必ず戻す

@@ -20,3 +20,21 @@ resource "aws_cloudwatch_log_subscription_filter" "audit_log_slack_metrics" {
   role_arn        = var.audit_log_slack_metrics.subscription_filter_role_arn
   distribution    = "ByLogStream"
 }
+
+/************************************************************
+500Error メトリクスフィルタ
+slack-metrics-api のログから "ERROR" または "panic recovered" 行を
+抽出し、cloudwatch_alarm モジュールで監視するカスタムメトリクスへ
+変換する。
+************************************************************/
+resource "aws_cloudwatch_log_metric_filter" "server_error_slack_metrics_api" {
+  name           = "500Error"
+  log_group_name = aws_cloudwatch_log_group.slack_metrics_api.name
+  pattern        = "?\"ERROR\" ?\"panic recovered\""
+
+  metric_transformation {
+    name      = "500ErrorCount"
+    namespace = "${var.env}/slack-metrics/api"
+    value     = "1"
+  }
+}

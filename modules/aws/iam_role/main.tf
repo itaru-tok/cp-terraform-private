@@ -510,6 +510,7 @@ resource "aws_iam_role_policy_attachment" "cp_scheduler_slack_metrics" {
     ecs_run_task          = aws_iam_policy.ecs_run_task.arn
     pass_role_to_ecs_task = aws_iam_policy.cp_scheduler_slack_metrics_pass_role_ecs.arn
     invoke_batch_lambda   = aws_iam_policy.scheduler_invoke_slack_metrics_batch_lambda.arn
+    submit_batch_job      = aws_iam_policy.scheduler_submit_slack_metrics_batch_job.arn
   }
 
   role       = aws_iam_role.cp_scheduler_slack_metrics.name

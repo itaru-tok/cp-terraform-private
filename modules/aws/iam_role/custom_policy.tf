@@ -137,6 +137,26 @@ resource "aws_iam_policy" "scheduler_invoke_slack_metrics_batch_lambda" {
 }
 
 /************************************************************
+EventBridge Scheduler → AWS Batch SubmitJob（slack-metrics）
+************************************************************/
+resource "aws_iam_policy" "scheduler_submit_slack_metrics_batch_job" {
+  name = "scheduler-submit-slack-metrics-batch-job-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "batch:SubmitJob"
+        Resource = [
+          "arn:aws:batch:${var.region}:${var.account_id}:job-definition/slack-metrics-${var.env}:*",
+          "arn:aws:batch:${var.region}:${var.account_id}:job-queue/slack-metrics-${var.env}",
+        ]
+      }
+    ]
+  })
+}
+
+/************************************************************
 ECS RunTask
 ************************************************************/
 resource "aws_iam_policy" "ecs_run_task" {

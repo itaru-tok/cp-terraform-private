@@ -117,3 +117,7 @@ output "role_arn_firehose_cwlogs_transformer" {
 output "role_arn_glue_crawler_audit_log" {
   value = try(aws_iam_role.glue_crawler_audit_log[0].arn, null)
 }
+
+output "role_arn_cp_q_developer" {
+  value = aws_iam_role.cp_q_developer.arn
+}

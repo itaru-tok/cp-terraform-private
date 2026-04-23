@@ -1090,3 +1090,26 @@ resource "aws_iam_role_policy_attachment" "glue_crawler_audit_log" {
   role       = aws_iam_role.glue_crawler_audit_log[0].name
   policy_arn = each.value
 }
+
+/************************************************************
+cp-q-developer
+Amazon Q Developer (旧 AWS Chatbot) が Slack へ通知を転送する際に
+引き受けるロール。今回は通知のみで AWS 操作は行わないため、
+ポリシーは何もアタッチしない（空ロール）。
+************************************************************/
+resource "aws_iam_role" "cp_q_developer" {
+  name = "cp-q-developer-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "chatbot.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}

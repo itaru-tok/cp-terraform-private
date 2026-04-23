@@ -29,3 +29,7 @@ output "id_db" {
 output "id_media_compressor_compress_video" {
   value = aws_security_group.media_compressor_compress_video.id
 }
+
+output "id_batch" {
+  value = aws_security_group.batch.id
+}

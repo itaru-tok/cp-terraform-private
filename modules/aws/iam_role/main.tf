@@ -1015,3 +1015,60 @@ resource "aws_iam_role_policy_attachment" "firehose_cwlogs_transformer" {
   role       = aws_iam_role.firehose_cwlogs_transformer.name
   policy_arn = each.value
 }
+
+/************************************************************
+glue-crawler-audit-log（Glue Crawler / NDJSON 監査ログ → Data Catalog）
+
+AWSGlueServiceRole は S3 の読み取りを `aws-glue-` プレフィックスに
+限定しているため、`cp-audit-log-itaru-stg` を読むためのカスタム
+S3 読み取りポリシーを追加で付与する。
+************************************************************/
+resource "aws_iam_role" "glue_crawler_audit_log" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "glue-crawler-audit-log-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "glue_crawler_audit_log_s3" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "glue-crawler-audit-log-s3-${var.env}"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+        ]
+        Resource = [
+          var.audit_log_bucket_arn,
+          "${var.audit_log_bucket_arn}/*",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "glue_crawler_audit_log" {
+  for_each = length(trimspace(var.audit_log_bucket_arn)) > 0 ? {
+    glue = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+    s3   = aws_iam_policy.glue_crawler_audit_log_s3[0].arn
+  } : {}
+
+  role       = aws_iam_role.glue_crawler_audit_log[0].name
+  policy_arn = each.value
+}

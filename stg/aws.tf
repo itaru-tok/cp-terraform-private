@@ -295,6 +295,27 @@ module "lambda" {
   }
 }
 
+module "firehose" {
+  source = "../modules/aws/firehose"
+  env    = local.env
+
+  audit_log_slack_metrics = {
+    role_arn               = module.iam_role.role_arn_cp_audit_log_firehose
+    bucket_arn             = module.s3.s3_bucket_arn_audit_log
+    transformer_lambda_arn = module.lambda.arn_firehose_cwlogs_transformer
+  }
+}
+
+module "cloudwatch_log_group" {
+  source = "../modules/aws/cloudwatch_log_group"
+  env    = local.env
+
+  audit_log_slack_metrics = {
+    firehose_arn                 = module.firehose.arn_audit_log_slack_metrics
+    subscription_filter_role_arn = module.iam_role.role_arn_logs_lambda_slack_metrics_api
+  }
+}
+
 resource "aws_lambda_permission" "media_compressor_s3_invoke_invoker" {
   count = module.s3.s3_bucket_id_media_compressor != null ? 1 : 0
 

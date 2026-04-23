@@ -384,6 +384,11 @@ module "event_bridge_scheduler" {
     lambda_arn = module.lambda.arn_slack_metrics_batch
   }
 
+  slack_metrics_v2 = {
+    job_queue_arn      = "arn:aws:batch:${local.region}:${local.account_id}:job-queue/slack-metrics-${local.env}"
+    job_definition_arn = "arn:aws:batch:${local.region}:${local.account_id}:job-definition/slack-metrics-${local.env}"
+  }
+
   cost_cutter = {
     # MEMO: コスト削減のため（EC2 モジュール停止時はスケジュール無効・対象なし）
     enable                                = false

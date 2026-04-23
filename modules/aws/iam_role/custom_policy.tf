@@ -148,6 +148,8 @@ resource "aws_iam_policy" "scheduler_submit_slack_metrics_batch_job" {
         Effect = "Allow"
         Action = "batch:SubmitJob"
         Resource = [
+          # リビジョン未指定（latest を指す）と指定ありの両方を許可
+          "arn:aws:batch:${var.region}:${var.account_id}:job-definition/slack-metrics-${var.env}",
           "arn:aws:batch:${var.region}:${var.account_id}:job-definition/slack-metrics-${var.env}:*",
           "arn:aws:batch:${var.region}:${var.account_id}:job-queue/slack-metrics-${var.env}",
         ]

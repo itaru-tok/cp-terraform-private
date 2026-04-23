@@ -295,6 +295,16 @@ module "lambda" {
   }
 }
 
+module "glue" {
+  source = "../modules/aws/glue"
+  env    = local.env
+
+  audit_log_slack_metrics = {
+    crawler_role_arn = module.iam_role.role_arn_glue_crawler_audit_log
+    bucket_name      = module.s3.s3_bucket_id_audit_log
+  }
+}
+
 module "firehose" {
   source = "../modules/aws/firehose"
   env    = local.env
@@ -303,6 +313,9 @@ module "firehose" {
     role_arn               = module.iam_role.role_arn_cp_audit_log_firehose
     bucket_arn             = module.s3.s3_bucket_arn_audit_log
     transformer_lambda_arn = module.lambda.arn_firehose_cwlogs_transformer
+    glue_database_name     = module.glue.audit_log_database_name
+    glue_table_name        = "slack_metrics"
+    glue_region            = local.region
   }
 }
 
@@ -316,6 +329,8 @@ module "cloudwatch_log_group" {
   }
 }
 
+# TEMP-IMPORT-DISABLED-START: import 中だけ count 評価を止めるためコメントアウト。import 完了後に必ず戻す
+/*
 resource "aws_lambda_permission" "media_compressor_s3_invoke_invoker" {
   count = module.s3.s3_bucket_id_media_compressor != null ? 1 : 0
 
@@ -339,6 +354,8 @@ resource "aws_s3_bucket_notification" "media_compressor_invoker" {
 
   depends_on = [aws_lambda_permission.media_compressor_s3_invoke_invoker]
 }
+*/
+# TEMP-IMPORT-DISABLED-END
 
 module "event_bridge_scheduler" {
   source             = "../modules/aws/event_bridge_scheduler"

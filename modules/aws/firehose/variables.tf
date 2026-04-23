@@ -7,6 +7,9 @@ variable "audit_log_slack_metrics" {
     role_arn               = string
     bucket_arn             = string
     transformer_lambda_arn = string
+    glue_database_name     = string
+    glue_table_name        = string
+    glue_region            = string
   })
-  description = "audit-log-slack-metrics Firehose（CWL → Lambda 変換 → S3）用の依存リソース"
+  description = "audit-log-slack-metrics Firehose（CWL → Lambda 変換 → Parquet 変換 → S3）用の依存リソース"
 }

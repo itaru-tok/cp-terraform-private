@@ -2,7 +2,8 @@
 audit-log-slack-metrics
 CloudWatch Logs サブスクリプション（DirectPut）→ Firehose
 → Lambda(firehose-cwlogs-transformer) で NDJSON 変換
-→ S3（cp-audit-log-itaru）
+→ Firehose が Glue スキーマを参照して Parquet に変換
+→ S3（cp-audit-log-itaru）配下の parquet/ へ出力
 ************************************************************/
 resource "aws_kinesis_firehose_delivery_stream" "audit_log_slack_metrics" {
   name        = "audit-log-slack-metrics-${var.env}"
@@ -11,12 +12,12 @@ resource "aws_kinesis_firehose_delivery_stream" "audit_log_slack_metrics" {
   extended_s3_configuration {
     role_arn            = var.audit_log_slack_metrics.role_arn
     bucket_arn          = var.audit_log_slack_metrics.bucket_arn
-    prefix              = "json/slack_metrics/!{timestamp:'year='yyyy'/month='MM'/day='dd'/hour='HH}/"
+    prefix              = "parquet/slack_metrics/!{timestamp:'year='yyyy'/month='MM'/day='dd'/hour='HH}/"
     error_output_prefix = "error/"
-    buffering_size      = 5
+    buffering_size      = 64
     buffering_interval  = 10
     compression_format  = "UNCOMPRESSED"
-    file_extension      = ".json.gz"
+    file_extension      = ".parquet"
     custom_time_zone    = "Asia/Tokyo"
 
     processing_configuration {
@@ -45,6 +46,30 @@ resource "aws_kinesis_firehose_delivery_stream" "audit_log_slack_metrics" {
           parameter_name  = "BufferIntervalInSeconds"
           parameter_value = "10"
         }
+      }
+    }
+
+    data_format_conversion_configuration {
+      enabled = true
+
+      input_format_configuration {
+        deserializer {
+          open_x_json_ser_de {}
+        }
+      }
+
+      output_format_configuration {
+        serializer {
+          parquet_ser_de {}
+        }
+      }
+
+      schema_configuration {
+        role_arn      = var.audit_log_slack_metrics.role_arn
+        database_name = var.audit_log_slack_metrics.glue_database_name
+        table_name    = var.audit_log_slack_metrics.glue_table_name
+        region        = var.audit_log_slack_metrics.glue_region
+        version_id    = "LATEST"
       }
     }
 

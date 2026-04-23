@@ -30,18 +30,9 @@ resource "aws_kinesis_firehose_delivery_stream" "audit_log_slack_metrics" {
           parameter_name  = "LambdaArn"
           parameter_value = "${var.audit_log_slack_metrics.transformer_lambda_arn}:$LATEST"
         }
-        parameters {
-          parameter_name  = "NumberOfRetries"
-          parameter_value = "3"
-        }
-        parameters {
-          parameter_name  = "RoleArn"
-          parameter_value = var.audit_log_slack_metrics.role_arn
-        }
-        parameters {
-          parameter_name  = "BufferSizeInMBs"
-          parameter_value = "1"
-        }
+        # NumberOfRetries(=3) / BufferSizeInMBs(=1) / RoleArn(=delivery stream role) は
+        # いずれも AWS のデフォルト or 配信ストリーム本体の role_arn と同値のため
+        # DescribeDeliveryStream API が返さず、明示すると無限ドリフトになる
         parameters {
           parameter_name  = "BufferIntervalInSeconds"
           parameter_value = "10"

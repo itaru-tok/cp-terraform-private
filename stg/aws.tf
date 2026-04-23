@@ -368,6 +368,18 @@ resource "aws_s3_bucket_notification" "media_compressor_invoker" {
 */
 # TEMP-IMPORT-DISABLED-END
 
+module "batch" {
+  source             = "../modules/aws/batch"
+  env                = local.env
+  region             = local.region
+  account_id         = local.account_id
+  private_subnet_ids = module.subnet.private_subnet_ids
+
+  slack_metrics = {
+    security_group_id = module.security_group.id_batch
+  }
+}
+
 module "event_bridge_scheduler" {
   source             = "../modules/aws/event_bridge_scheduler"
   env                = local.env
@@ -385,8 +397,8 @@ module "event_bridge_scheduler" {
   }
 
   slack_metrics_v2 = {
-    job_queue_arn      = "arn:aws:batch:${local.region}:${local.account_id}:job-queue/slack-metrics-${local.env}"
-    job_definition_arn = "arn:aws:batch:${local.region}:${local.account_id}:job-definition/slack-metrics-${local.env}"
+    job_queue_arn      = module.batch.job_queue_arn_slack_metrics
+    job_definition_arn = module.batch.job_definition_arn_slack_metrics
   }
 
   cost_cutter = {

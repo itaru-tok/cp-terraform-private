@@ -305,6 +305,15 @@ module "glue" {
   }
 }
 
+module "athena" {
+  source = "../modules/aws/athena"
+  env    = local.env
+
+  primary = {
+    query_result_bucket_id = module.s3.s3_bucket_id_athena_query_result
+  }
+}
+
 module "firehose" {
   source = "../modules/aws/firehose"
   env    = local.env
@@ -329,6 +338,8 @@ module "cloudwatch_log_group" {
   }
 }
 
+# TEMP-IMPORT-DISABLED-START: import 中だけ count 評価を止めるためコメントアウト。import 完了後に必ず戻す
+/*
 # TEMP-IMPORT-DISABLED-START: import 中だけ count 評価を止めるためコメントアウト。import 完了後に必ず戻す
 /*
 resource "aws_lambda_permission" "media_compressor_s3_invoke_invoker" {

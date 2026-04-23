@@ -35,6 +35,7 @@ resource "aws_iam_role_policy_attachment" "cp_slack_metrics_backend" {
     ses        = "arn:aws:iam::aws:policy/AmazonSESFullAccess"
     sqs        = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
     ssm_core   = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    s3         = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
   }
 
   role       = aws_iam_role.cp_slack_metrics_backend.name

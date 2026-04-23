@@ -288,6 +288,11 @@ module "lambda" {
     image_uri         = "${module.ecr.url_media_compressor_invoker}:${local.media_compressor_invoker_image_tag}"
     state_machine_arn = local.media_compressor_state_machine_arn
   }
+
+  firehose_cwlogs_transformer = {
+    role_arn  = module.iam_role.role_arn_firehose_cwlogs_transformer
+    image_uri = "${module.ecr.url_firehose_cwlogs_transformer}:${local.firehose_cwlogs_transformer_image_tag}"
+  }
 }
 
 resource "aws_lambda_permission" "media_compressor_s3_invoke_invoker" {

@@ -30,6 +30,9 @@ locals {
   # media-compressor-invoker。初回は ECR に push したイメージタグに合わせて更新する
   media_compressor_invoker_image_tag = "f020be2"
 
+  # firehose-cwlogs-transformer。`make release-image` 後に push したイメージタグへ更新する
+  firehose_cwlogs_transformer_image_tag = "f020be2"
+
   # Step Functions コンソールのステートマシン名と一致させる（例: media-compressor-stg）
   media_compressor_state_machine_arn = "arn:aws:states:${local.region}:${local.account_id}:stateMachine:media-compressor-${local.env}"
 }

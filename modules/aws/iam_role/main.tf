@@ -901,7 +901,7 @@ resource "aws_iam_role" "cp_audit_log_firehose" {
 }
 
 locals {
-  audit_log_firehose_transform_lambda_name = trimspace(var.audit_log_firehose_transform_function_name) != "" ? var.audit_log_firehose_transform_function_name : "cp-audit-log-firehose-transform-${var.env}"
+  audit_log_firehose_transform_lambda_name = trimspace(var.audit_log_firehose_transform_function_name) != "" ? var.audit_log_firehose_transform_function_name : "firehose-cwlogs-transformer-${var.env}"
 
   slack_metrics_cwl_firehose_stream_name = trimspace(var.slack_metrics_cwl_firehose_delivery_stream_name) != "" ? var.slack_metrics_cwl_firehose_delivery_stream_name : "audit-log-slack-metrics-${var.env}"
   slack_metrics_cwl_firehose_stream_arn  = "arn:aws:firehose:${var.region}:${var.account_id}:deliverystream/${local.slack_metrics_cwl_firehose_stream_name}"
@@ -985,4 +985,33 @@ resource "aws_iam_role_policy" "logs_lambda_slack_metrics_api_firehose" {
       }
     ]
   })
+}
+
+/************************************************************
+firehose-cwlogs-transformer（Firehose レコード変換 Lambda / CloudWatch Logs JSON Export → NDJSON）
+************************************************************/
+resource "aws_iam_role" "firehose_cwlogs_transformer" {
+  name = "firehose-cwlogs-transformer-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "firehose_cwlogs_transformer" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.firehose_cwlogs_transformer.name
+  policy_arn = each.value
 }

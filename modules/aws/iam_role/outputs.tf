@@ -109,3 +109,7 @@ output "role_arn_cp_audit_log_firehose" {
 output "role_arn_logs_lambda_slack_metrics_api" {
   value = aws_iam_role.logs_lambda_slack_metrics_api.arn
 }
+
+output "role_arn_firehose_cwlogs_transformer" {
+  value = aws_iam_role.firehose_cwlogs_transformer.arn
+}

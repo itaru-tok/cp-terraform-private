@@ -33,3 +33,7 @@ output "url_media_compressor_notify_result" {
 output "url_media_compressor_invoker" {
   value = module.ecr_media_compressor_invoker.repository_url
 }
+
+output "url_firehose_cwlogs_transformer" {
+  value = module.ecr_firehose_cwlogs_transformer.repository_url
+}

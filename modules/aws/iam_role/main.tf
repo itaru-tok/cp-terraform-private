@@ -1113,3 +1113,38 @@ resource "aws_iam_role" "cp_q_developer" {
     ]
   })
 }
+
+/************************************************************
+slack-metrics-static-edge
+CloudFront のビヘイビアに紐付ける Lambda@Edge 用の実行ロール。
+Lambda@Edge は通常の Lambda と異なり edgelambda.amazonaws.com
+からも AssumeRole される必要があるため、Principal に両方を含める。
+************************************************************/
+resource "aws_iam_role" "slack_metrics_static_edge" {
+  name = "slack-metrics-static-edge-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "lambda.amazonaws.com",
+            "edgelambda.amazonaws.com",
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "slack_metrics_static_edge" {
+  for_each = {
+    cloud_watch_logs_write = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.slack_metrics_static_edge.name
+  policy_arn = each.value
+}

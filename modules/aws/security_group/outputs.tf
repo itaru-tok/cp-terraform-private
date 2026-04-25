@@ -33,3 +33,7 @@ output "id_media_compressor_compress_video" {
 output "id_batch" {
   value = aws_security_group.batch.id
 }
+
+output "id_vpc_endpoint" {
+  value = aws_security_group.vpc_endpoint.id
+}

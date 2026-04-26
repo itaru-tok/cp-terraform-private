@@ -98,6 +98,7 @@ module "iam_role" {
   account_id                         = local.account_id
   media_compressor_bucket_arn        = module.s3.s3_bucket_arn_media_compressor
   media_compressor_state_machine_arn = local.media_compressor_state_machine_arn
+  audit_log_bucket_arn               = module.s3.s3_bucket_arn_audit_log
 }
 
 # MEMO: コスト削減のため
@@ -287,8 +288,92 @@ module "lambda" {
     image_uri         = "${module.ecr.url_media_compressor_invoker}:${local.media_compressor_invoker_image_tag}"
     state_machine_arn = local.media_compressor_state_machine_arn
   }
+
+  firehose_cwlogs_transformer = {
+    role_arn  = module.iam_role.role_arn_firehose_cwlogs_transformer
+    image_uri = "${module.ecr.url_firehose_cwlogs_transformer}:${local.firehose_cwlogs_transformer_image_tag}"
+  }
 }
 
+module "glue" {
+  source = "../modules/aws/glue"
+  env    = local.env
+
+  audit_log_slack_metrics = {
+    crawler_role_arn = module.iam_role.role_arn_glue_crawler_audit_log
+    bucket_name      = module.s3.s3_bucket_id_audit_log
+  }
+}
+
+module "athena" {
+  source = "../modules/aws/athena"
+  env    = local.env
+
+  primary = {
+    query_result_bucket_id = module.s3.s3_bucket_id_athena_query_result
+  }
+}
+
+module "firehose" {
+  source = "../modules/aws/firehose"
+  env    = local.env
+
+  audit_log_slack_metrics = {
+    role_arn               = module.iam_role.role_arn_cp_audit_log_firehose
+    bucket_arn             = module.s3.s3_bucket_arn_audit_log
+    transformer_lambda_arn = module.lambda.arn_firehose_cwlogs_transformer
+    glue_database_name     = module.glue.audit_log_database_name
+    glue_table_name        = "slack_metrics"
+    glue_region            = local.region
+  }
+}
+
+module "cloudwatch_log_group" {
+  source = "../modules/aws/cloudwatch_log_group"
+  env    = local.env
+
+  audit_log_slack_metrics = {
+    firehose_arn                 = module.firehose.arn_audit_log_slack_metrics
+    subscription_filter_role_arn = module.iam_role.role_arn_logs_lambda_slack_metrics_api
+  }
+}
+
+module "sns" {
+  source = "../modules/aws/sns"
+  env    = local.env
+}
+
+module "cloudwatch_alarm" {
+  source = "../modules/aws/cloudwatch_alarm"
+  env    = local.env
+
+  ntf_alarm_sns_topic_arn = module.sns.arn_ntf_alarm
+
+  server_error_slack_metrics_api = {
+    alarm_description = "【いたる】\nSlack Metrics APIで1分間に10回以上のサーバエラーが発生しました。\n直ちに以下のロググループを確認してください！\n\n```\n/aws/lambda/slack-metrics-api-${local.env}\n```"
+  }
+
+  rds_cpu_cloud_pratica = {
+    alarm_description = "【いたる】\nRDS Cloud Practical StagingインスタンスのCPU使用率が 閾値の70%を超えました。直ちにスペックの調整を行ってください。"
+  }
+}
+
+module "amazon_q_chat" {
+  source = "../modules/aws/amazon_q_chat"
+  env    = local.env
+
+  ntf_alarm = {
+    iam_role_arn     = module.iam_role.role_arn_cp_q_developer
+    sns_topic_arn    = module.sns.arn_ntf_alarm
+    slack_team_id    = "T088SK8B43U"
+    slack_channel_id = "C09C4R1RAUQ"
+  }
+}
+
+# TEMP-IMPORT-DISABLED-START: import 中だけ count 評価を止めるためコメントアウト。import 完了後に必ず戻す
+/*
+# TEMP-IMPORT-DISABLED-START: import 中だけ count 評価を止めるためコメントアウト。import 完了後に必ず戻す
+/*
 resource "aws_lambda_permission" "media_compressor_s3_invoke_invoker" {
   count = module.s3.s3_bucket_id_media_compressor != null ? 1 : 0
 
@@ -312,6 +397,20 @@ resource "aws_s3_bucket_notification" "media_compressor_invoker" {
 
   depends_on = [aws_lambda_permission.media_compressor_s3_invoke_invoker]
 }
+*/
+# TEMP-IMPORT-DISABLED-END
+
+module "batch" {
+  source             = "../modules/aws/batch"
+  env                = local.env
+  region             = local.region
+  account_id         = local.account_id
+  private_subnet_ids = module.subnet.private_subnet_ids
+
+  slack_metrics = {
+    security_group_id = module.security_group.id_batch
+  }
+}
 
 module "event_bridge_scheduler" {
   source             = "../modules/aws/event_bridge_scheduler"
@@ -327,6 +426,11 @@ module "event_bridge_scheduler" {
 
   slack_metrics_v3 = {
     lambda_arn = module.lambda.arn_slack_metrics_batch
+  }
+
+  slack_metrics_v2 = {
+    job_queue_arn      = module.batch.job_queue_arn_slack_metrics
+    job_definition_arn = module.batch.job_definition_arn_slack_metrics
   }
 
   cost_cutter = {

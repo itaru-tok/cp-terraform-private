@@ -35,6 +35,7 @@ resource "aws_iam_role_policy_attachment" "cp_slack_metrics_backend" {
     ses        = "arn:aws:iam::aws:policy/AmazonSESFullAccess"
     sqs        = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
     ssm_core   = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    s3         = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
   }
 
   role       = aws_iam_role.cp_slack_metrics_backend.name
@@ -509,6 +510,7 @@ resource "aws_iam_role_policy_attachment" "cp_scheduler_slack_metrics" {
     ecs_run_task          = aws_iam_policy.ecs_run_task.arn
     pass_role_to_ecs_task = aws_iam_policy.cp_scheduler_slack_metrics_pass_role_ecs.arn
     invoke_batch_lambda   = aws_iam_policy.scheduler_invoke_slack_metrics_batch_lambda.arn
+    submit_batch_job      = aws_iam_policy.scheduler_submit_slack_metrics_batch_job.arn
   }
 
   role       = aws_iam_role.cp_scheduler_slack_metrics.name
@@ -876,5 +878,273 @@ resource "aws_iam_role_policy_attachment" "practice_ecs_calculate" {
   }
 
   role       = aws_iam_role.practice_ecs_calculate.name
+  policy_arn = each.value
+}
+
+/************************************************************
+cp-audit-log-firehose（CloudWatch Logs → Firehose → S3、将来の Lambda 変換用）
+************************************************************/
+resource "aws_iam_role" "cp_audit_log_firehose" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "cp-audit-log-firehose-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+locals {
+  audit_log_firehose_transform_lambda_name = trimspace(var.audit_log_firehose_transform_function_name) != "" ? var.audit_log_firehose_transform_function_name : "firehose-cwlogs-transformer-${var.env}"
+
+  slack_metrics_cwl_firehose_stream_name = trimspace(var.slack_metrics_cwl_firehose_delivery_stream_name) != "" ? var.slack_metrics_cwl_firehose_delivery_stream_name : "audit-log-slack-metrics-${var.env}"
+  slack_metrics_cwl_firehose_stream_arn  = "arn:aws:firehose:${var.region}:${var.account_id}:deliverystream/${local.slack_metrics_cwl_firehose_stream_name}"
+
+  audit_log_glue_database_name = trimspace(var.audit_log_glue_database_name) != "" ? var.audit_log_glue_database_name : "audit_log_${var.env}"
+}
+
+resource "aws_iam_role_policy" "cp_audit_log_firehose" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "cp-audit-log-firehose-delivery-${var.env}"
+  role  = aws_iam_role.cp_audit_log_firehose[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "S3Delivery"
+        Effect = "Allow"
+        Action = [
+          "s3:AbortMultipartUpload",
+          "s3:GetBucketLocation",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads",
+          "s3:PutObject",
+        ]
+        Resource = [
+          var.audit_log_bucket_arn,
+          "${var.audit_log_bucket_arn}/*",
+        ]
+      },
+      {
+        Sid    = "LambdaTransform"
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction",
+        ]
+        Resource = [
+          "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.audit_log_firehose_transform_lambda_name}",
+          "arn:aws:lambda:${var.region}:${var.account_id}:function:${local.audit_log_firehose_transform_lambda_name}:*",
+        ]
+      },
+      {
+        Sid    = "GlueTableRead"
+        Effect = "Allow"
+        Action = [
+          "glue:GetTable",
+          "glue:GetTableVersion",
+          "glue:GetTableVersions",
+        ]
+        Resource = [
+          "arn:aws:glue:${var.region}:${var.account_id}:catalog",
+          "arn:aws:glue:${var.region}:${var.account_id}:database/${local.audit_log_glue_database_name}",
+          "arn:aws:glue:${var.region}:${var.account_id}:table/${local.audit_log_glue_database_name}/*",
+        ]
+      },
+    ]
+  })
+}
+
+/************************************************************
+logs-lambda-slack-metrics-api（CloudWatch Logs → Firehose サブスクリプション用）
+************************************************************/
+resource "aws_iam_role" "logs_lambda_slack_metrics_api" {
+  name = "logs-lambda-slack-metrics-api-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "logs_lambda_slack_metrics_api_firehose" {
+  name = "logs-lambda-slack-metrics-api-firehose-${var.env}"
+  role = aws_iam_role.logs_lambda_slack_metrics_api.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "firehose:PutRecord",
+          "firehose:PutRecordBatch",
+        ]
+        Resource = [
+          local.slack_metrics_cwl_firehose_stream_arn,
+        ]
+      }
+    ]
+  })
+}
+
+/************************************************************
+firehose-cwlogs-transformer（Firehose レコード変換 Lambda / CloudWatch Logs JSON Export → NDJSON）
+************************************************************/
+resource "aws_iam_role" "firehose_cwlogs_transformer" {
+  name = "firehose-cwlogs-transformer-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "firehose_cwlogs_transformer" {
+  for_each = {
+    cloudwatch = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.firehose_cwlogs_transformer.name
+  policy_arn = each.value
+}
+
+/************************************************************
+glue-crawler-audit-log（Glue Crawler / NDJSON 監査ログ → Data Catalog）
+
+AWSGlueServiceRole は S3 の読み取りを `aws-glue-` プレフィックスに
+限定しているため、`cp-audit-log-itaru-stg` を読むためのカスタム
+S3 読み取りポリシーを追加で付与する。
+************************************************************/
+resource "aws_iam_role" "glue_crawler_audit_log" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "glue-crawler-audit-log-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "glue_crawler_audit_log_s3" {
+  count = length(trimspace(var.audit_log_bucket_arn)) > 0 ? 1 : 0
+  name  = "glue-crawler-audit-log-s3-${var.env}"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+        ]
+        Resource = [
+          var.audit_log_bucket_arn,
+          "${var.audit_log_bucket_arn}/*",
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "glue_crawler_audit_log" {
+  for_each = length(trimspace(var.audit_log_bucket_arn)) > 0 ? {
+    glue = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+    s3   = aws_iam_policy.glue_crawler_audit_log_s3[0].arn
+  } : {}
+
+  role       = aws_iam_role.glue_crawler_audit_log[0].name
+  policy_arn = each.value
+}
+
+/************************************************************
+cp-q-developer
+Amazon Q Developer (旧 AWS Chatbot) が Slack へ通知を転送する際に
+引き受けるロール。今回は通知のみで AWS 操作は行わないため、
+ポリシーは何もアタッチしない（空ロール）。
+************************************************************/
+resource "aws_iam_role" "cp_q_developer" {
+  name = "cp-q-developer-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "chatbot.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+/************************************************************
+slack-metrics-static-edge
+CloudFront のビヘイビアに紐付ける Lambda@Edge 用の実行ロール。
+Lambda@Edge は通常の Lambda と異なり edgelambda.amazonaws.com
+からも AssumeRole される必要があるため、Principal に両方を含める。
+************************************************************/
+resource "aws_iam_role" "slack_metrics_static_edge" {
+  name = "slack-metrics-static-edge-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "lambda.amazonaws.com",
+            "edgelambda.amazonaws.com",
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "slack_metrics_static_edge" {
+  for_each = {
+    cloud_watch_logs_write = aws_iam_policy.cloud_watch_logs_write.arn
+  }
+
+  role       = aws_iam_role.slack_metrics_static_edge.name
   policy_arn = each.value
 }

@@ -62,3 +62,12 @@ variable "media_compressor_invoker" {
   default     = null
   description = "S3 イベントから media-compressor Step Functions を起動する Invoker Lambda（コンテナ）。null のときリソースを作らない"
 }
+
+variable "firehose_cwlogs_transformer" {
+  type = object({
+    role_arn  = string
+    image_uri = string
+  })
+  default     = null
+  description = "Firehose レコード変換 Lambda（CloudWatch Logs JSON Export → NDJSON）。null のときリソースを作らない"
+}

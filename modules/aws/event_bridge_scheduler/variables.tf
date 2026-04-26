@@ -30,3 +30,11 @@ variable "slack_metrics_v3" {
   })
   default = null
 }
+
+variable "slack_metrics_v2" {
+  type = object({
+    job_queue_arn      = string
+    job_definition_arn = string
+  })
+  default = null
+}

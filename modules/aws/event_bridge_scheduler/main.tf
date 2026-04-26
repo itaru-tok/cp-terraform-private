@@ -61,6 +61,45 @@ resource "aws_scheduler_schedule" "sync_workspaces" {
   }
 }
 
+resource "aws_scheduler_schedule" "sync_workspaces_v2" {
+  count = var.slack_metrics_v2 != null ? 1 : 0
+
+  group_name                   = aws_scheduler_schedule_group.slack_metrics.name
+  name                         = "sync-workspace-v2-${var.env}"
+  description                  = "AWS Batchにてワークスペース同期処理を毎朝2時に実行する"
+  schedule_expression          = "at(2026-04-23T18:33:48)"
+  schedule_expression_timezone = "Asia/Tokyo"
+  state                        = "ENABLED"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = "arn:aws:scheduler:::aws-sdk:batch:submitJob"
+    role_arn = var.slack_metrics.iam_role_arn
+
+    input = jsonencode({
+      JobName       = "sync-workspaces-v2"
+      JobQueue      = var.slack_metrics_v2.job_queue_arn
+      JobDefinition = var.slack_metrics_v2.job_definition_arn
+      ContainerOverrides = {
+        Environment = [
+          {
+            Name  = "TYPE"
+            Value = "sync-workspaces"
+          }
+        ]
+      }
+    })
+
+    retry_policy {
+      maximum_event_age_in_seconds = 3600
+      maximum_retry_attempts       = 3
+    }
+  }
+}
+
 resource "aws_scheduler_schedule" "sync_workspaces_v3" {
   count = var.slack_metrics_v3 != null ? 1 : 0
 

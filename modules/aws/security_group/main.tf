@@ -70,6 +70,26 @@ resource "aws_security_group" "media_compressor_compress_video" {
   }
 }
 
+resource "aws_security_group" "batch" {
+  name        = "cp-batch-${var.env}"
+  description = "default sg for AWS Batch compute environments"
+  vpc_id      = var.vpc_id
+  tags = {
+    Name = "cp-batch-${var.env}"
+  }
+}
+
+# Interface 型 VPC エンドポイントの ENI にアタッチする共通 SG。
+# 全 Interface エンドポイントで使い回す運用にする。
+resource "aws_security_group" "vpc_endpoint" {
+  name        = "cp-vpc-endpoint-${var.env}"
+  description = "shared sg for interface type VPC endpoints"
+  vpc_id      = var.vpc_id
+  tags = {
+    Name = "cp-vpc-endpoint-${var.env}"
+  }
+}
+
 # --- Inbound Rules ---
 
 # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にstg/prdのコンソールから直接設定済み）
@@ -80,6 +100,7 @@ resource "aws_vpc_security_group_ingress_rule" "db" {
     slack_metrics_backend = aws_security_group.slack_metrics_backend.id
     db_migrator           = aws_security_group.db_migrator.id
     slack_metrics_lambda  = aws_security_group.slack_metrics_lambda.id
+    batch                 = aws_security_group.batch.id
   }
 
   security_group_id            = aws_security_group.db.id
@@ -93,6 +114,20 @@ resource "aws_vpc_security_group_ingress_rule" "slack_metrics_backend" {
   referenced_security_group_id = aws_security_group.alb.id
   from_port                    = 8080
   to_port                      = 8080
+  ip_protocol                  = "tcp"
+}
+
+# 最小権限: サブネット CIDR ではなく、VPC エンドポイントを呼び出すリソース
+# の SG だけを許可する。今は Lambda だけだが、利用元が増えたら for_each に追加。
+resource "aws_vpc_security_group_ingress_rule" "vpc_endpoint" {
+  for_each = {
+    slack_metrics_lambda = aws_security_group.slack_metrics_lambda.id
+  }
+
+  security_group_id            = aws_security_group.vpc_endpoint.id
+  referenced_security_group_id = each.value
+  from_port                    = 443
+  to_port                      = 443
   ip_protocol                  = "tcp"
 }
 
@@ -144,6 +179,18 @@ resource "aws_vpc_security_group_egress_rule" "slack_metrics_lambda" {
 
 resource "aws_vpc_security_group_egress_rule" "media_compressor_compress_video" {
   security_group_id = aws_security_group.media_compressor_compress_video.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "batch" {
+  security_group_id = aws_security_group.batch.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "vpc_endpoint" {
+  security_group_id = aws_security_group.vpc_endpoint.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }

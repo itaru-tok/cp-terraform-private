@@ -30,6 +30,14 @@ output "function_name_media_compressor_invoker" {
   value = try(aws_lambda_function.media_compressor_invoker[0].function_name, null)
 }
 
+output "arn_firehose_cwlogs_transformer" {
+  value = try(aws_lambda_function.firehose_cwlogs_transformer[0].arn, null)
+}
+
+output "function_name_firehose_cwlogs_transformer" {
+  value = try(aws_lambda_function.firehose_cwlogs_transformer[0].function_name, null)
+}
+
 output "invoke_arn_slack_metrics_api" {
   value = aws_lambda_function.slack_metrics_api.invoke_arn
 }

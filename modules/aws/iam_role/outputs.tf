@@ -101,3 +101,27 @@ output "role_arn_media_compressor_invoker" {
 output "role_arn_practice_ecs_calculate" {
   value = aws_iam_role.practice_ecs_calculate.arn
 }
+
+output "role_arn_cp_audit_log_firehose" {
+  value = try(aws_iam_role.cp_audit_log_firehose[0].arn, null)
+}
+
+output "role_arn_logs_lambda_slack_metrics_api" {
+  value = aws_iam_role.logs_lambda_slack_metrics_api.arn
+}
+
+output "role_arn_firehose_cwlogs_transformer" {
+  value = aws_iam_role.firehose_cwlogs_transformer.arn
+}
+
+output "role_arn_glue_crawler_audit_log" {
+  value = try(aws_iam_role.glue_crawler_audit_log[0].arn, null)
+}
+
+output "role_arn_cp_q_developer" {
+  value = aws_iam_role.cp_q_developer.arn
+}
+
+output "role_arn_slack_metrics_static_edge" {
+  value = aws_iam_role.slack_metrics_static_edge.arn
+}

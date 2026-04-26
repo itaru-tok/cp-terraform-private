@@ -44,3 +44,9 @@ module "ecr_media_compressor_invoker" {
   source = "../ecr_unit"
   name   = "media-compressor-invoker-${var.env}"
 }
+
+// Firehose レコード変換 Lambda（CloudWatch Logs JSON Export → NDJSON）
+module "ecr_firehose_cwlogs_transformer" {
+  source = "../ecr_unit"
+  name   = "firehose-cwlogs-transformer-${var.env}"
+}

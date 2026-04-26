@@ -80,6 +80,22 @@ resource "aws_lambda_function" "media_compressor_invoker" {
   }
 }
 
+resource "aws_lambda_function" "firehose_cwlogs_transformer" {
+  count = var.firehose_cwlogs_transformer != null ? 1 : 0
+
+  function_name = "firehose-cwlogs-transformer-${var.env}"
+  role          = var.firehose_cwlogs_transformer.role_arn
+  image_uri     = var.firehose_cwlogs_transformer.image_uri
+  package_type  = "Image"
+  description   = "Firehose レコード変換 Lambda（CloudWatch Logs JSON Export → NDJSON）"
+  memory_size   = 256
+  timeout       = 60
+
+  lifecycle {
+    ignore_changes = [image_uri]
+  }
+}
+
 resource "aws_lambda_function" "slack_metrics_api" {
   function_name = "slack-metrics-api-${var.env}"
   role          = var.slack_metrics.role_arn

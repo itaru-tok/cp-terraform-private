@@ -1148,3 +1148,32 @@ resource "aws_iam_role_policy_attachment" "slack_metrics_static_edge" {
   role       = aws_iam_role.slack_metrics_static_edge.name
   policy_arn = each.value
 }
+
+/************************************************************
+cost-api（cost-aggregator + cost-provider 同居 ECS タスクロール）
+************************************************************/
+resource "aws_iam_role" "cost_api" {
+  name = "cost-api-${var.env}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cost_api" {
+  for_each = {
+    read_cost_and_usage = aws_iam_policy.read_cost_and_usage.arn
+  }
+
+  role       = aws_iam_role.cost_api.name
+  policy_arn = each.value
+}

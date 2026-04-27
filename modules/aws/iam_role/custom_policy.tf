@@ -647,3 +647,22 @@ resource "aws_iam_policy" "github_actions" {
     ]
   })
 }
+
+/************************************************************
+Cost Explorer GetCostAndUsage Read（cost-provider 用）
+************************************************************/
+resource "aws_iam_policy" "read_cost_and_usage" {
+  name = "read-cost-and-usage-${var.env}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ce:GetCostAndUsage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}

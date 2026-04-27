@@ -34,6 +34,15 @@ resource "aws_security_group" "slack_metrics_backend" {
   }
 }
 
+resource "aws_security_group" "cost_api" {
+  name        = "cp-cost-api-${var.env}"
+  description = "cost-api ecs service sg"
+  vpc_id      = var.vpc_id
+  tags = {
+    Name = "cp-cost-api-${var.env}"
+  }
+}
+
 resource "aws_security_group" "db_migrator" {
   name        = "cp-db-migrator-${var.env}"
   description = "db migrator ecs sg"
@@ -111,6 +120,14 @@ resource "aws_vpc_security_group_ingress_rule" "db" {
 }
 resource "aws_vpc_security_group_ingress_rule" "slack_metrics_backend" {
   security_group_id            = aws_security_group.slack_metrics_backend.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 8080
+  to_port                      = 8080
+  ip_protocol                  = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "cost_api" {
+  security_group_id            = aws_security_group.cost_api.id
   referenced_security_group_id = aws_security_group.alb.id
   from_port                    = 8080
   to_port                      = 8080

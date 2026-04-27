@@ -50,3 +50,13 @@ module "ecr_firehose_cwlogs_transformer" {
   source = "../ecr_unit"
   name   = "firehose-cwlogs-transformer-${var.env}"
 }
+
+module "ecr_cost_aggregator" {
+  source = "../ecr_unit"
+  name   = "cost-aggregator-${var.env}"
+}
+
+module "ecr_cost_provider" {
+  source = "../ecr_unit"
+  name   = "cost-provider-${var.env}"
+}

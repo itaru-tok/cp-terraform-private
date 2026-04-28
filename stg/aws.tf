@@ -492,6 +492,15 @@ module "route53_itaru_uk" {
         evaluate_target_health = true
       }
     },
+    {
+      name = "cost-api.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = module.alb.dns_name
+        zone_id                = module.alb.zone_id_ap_northeast_1
+        evaluate_target_health = true
+      }
+    },
     # MEMO: コスト削減のため（data.aws_lb.k8s_shared 停止に合わせてコメントアウト）
     # {
     #   name = "sm-api-v2.${local.base_host}"

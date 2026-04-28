@@ -51,6 +51,8 @@ module "alb" {
   certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
   tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
   sg_alb_id                = module.security_group.id_alb
+  tg_cost_api_arn          = module.target_group.arn_cost_api
+  cost_api_host            = "cost-api.${local.base_host}"
 }
 
 module "s3" {

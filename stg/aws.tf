@@ -222,7 +222,7 @@ module "ecs" {
     task_definition        = "cost-api-${local.env}"
     enable_execute_command = true
     capacity_provider      = "FARGATE_SPOT"
-    target_group_arn       = null
+    target_group_arn       = module.target_group.arn_cost_api
     security_group_ids     = [module.security_group.id_cost_api]
     subnet_ids             = module.subnet.private_subnet_ids
   }

@@ -6,7 +6,17 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.5.0" // 6.5.0 以上 6.6.0 未満 を許容
     }
+    datadog = {
+      source  = "DataDog/datadog"
+      version = "~> 3.0"
+    }
   }
+}
+
+provider "datadog" {
+  api_key = local.datadog_keys.api_key
+  app_key = local.datadog_keys.app_key
+  api_url = "https://api.ap1.datadoghq.com"
 }
 
 provider "aws" {

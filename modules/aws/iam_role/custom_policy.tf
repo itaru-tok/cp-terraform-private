@@ -666,3 +666,22 @@ resource "aws_iam_policy" "read_cost_and_usage" {
     ]
   })
 }
+
+/************************************************************
+Datadog AWS Integration Policy（External ID が渡されたときだけ作成）
+************************************************************/
+data "aws_iam_policy_document" "datadog_aws_integration" {
+  count = var.datadog_external_id != null ? length(var.datadog_permission_chunks) : 0
+
+  statement {
+    actions   = var.datadog_permission_chunks[count.index]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "datadog_aws_integration" {
+  count = var.datadog_external_id != null ? length(var.datadog_permission_chunks) : 0
+
+  name   = "DatadogAWSIntegrationPolicy-${count.index + 1}"
+  policy = data.aws_iam_policy_document.datadog_aws_integration[count.index].json
+}

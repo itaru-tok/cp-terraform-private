@@ -35,4 +35,12 @@ locals {
 
   # Step Functions コンソールのステートマシン名と一致させる（例: media-compressor-stg）
   media_compressor_state_machine_arn = "arn:aws:states:${local.region}:${local.account_id}:stateMachine:media-compressor-${local.env}"
+
+  datadog_keys = jsondecode(
+    data.aws_secretsmanager_secret_version.datadog_keys.secret_string
+  )
+}
+
+data "aws_secretsmanager_secret_version" "datadog_keys" {
+  secret_id = "datadog-keys-${local.env}"
 }

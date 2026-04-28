@@ -1177,3 +1177,45 @@ resource "aws_iam_role_policy_attachment" "cost_api" {
   role       = aws_iam_role.cost_api.name
   policy_arn = each.value
 }
+
+/************************************************************
+Datadog AWS Integration（External ID が渡されたときだけ作成）
+************************************************************/
+data "aws_iam_policy_document" "datadog_aws_integration_assume_role" {
+  count = var.datadog_external_id != null ? 1 : 0
+
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${var.datadog_aws_account_id}:root"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = [var.datadog_external_id]
+    }
+  }
+}
+
+resource "aws_iam_role" "datadog_aws_integration" {
+  count = var.datadog_external_id != null ? 1 : 0
+
+  name               = "DatadogIntegrationRole"
+  description        = "Role for Datadog AWS Integration"
+  assume_role_policy = data.aws_iam_policy_document.datadog_aws_integration_assume_role[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "datadog_aws_integration" {
+  count = var.datadog_external_id != null ? length(var.datadog_permission_chunks) : 0
+
+  role       = aws_iam_role.datadog_aws_integration[0].name
+  policy_arn = aws_iam_policy.datadog_aws_integration[count.index].arn
+}
+
+resource "aws_iam_role_policy_attachment" "datadog_aws_integration_security_audit" {
+  count = var.datadog_external_id != null ? 1 : 0
+
+  role       = aws_iam_role.datadog_aws_integration[0].name
+  policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
+}

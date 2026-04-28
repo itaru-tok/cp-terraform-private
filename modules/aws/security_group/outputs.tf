@@ -37,3 +37,7 @@ output "id_batch" {
 output "id_vpc_endpoint" {
   value = aws_security_group.vpc_endpoint.id
 }
+
+output "id_cost_api" {
+  value = aws_security_group.cost_api.id
+}

@@ -214,6 +214,16 @@ module "ecs" {
     security_group_ids     = [module.security_group.id_slack_metrics_backend]
     subnet_ids             = module.subnet.private_subnet_ids
   }
+
+  cost_api = {
+    name                   = "cost-api-${local.env}"
+    task_definition        = "cost-api-${local.env}"
+    enable_execute_command = true
+    capacity_provider      = "FARGATE_SPOT"
+    target_group_arn       = null
+    security_group_ids     = [module.security_group.id_cost_api]
+    subnet_ids             = module.subnet.private_subnet_ids
+  }
 }
 
 module "ecs_task_definition" {

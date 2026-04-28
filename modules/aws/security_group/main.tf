@@ -176,6 +176,12 @@ resource "aws_vpc_security_group_egress_rule" "slack_metrics_backend" {
   ip_protocol       = "-1"
 }
 
+resource "aws_vpc_security_group_egress_rule" "cost_api" {
+  security_group_id = aws_security_group.cost_api.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
 resource "aws_vpc_security_group_egress_rule" "db_migrator" {
   security_group_id = aws_security_group.db_migrator.id
   cidr_ipv4         = "0.0.0.0/0"

@@ -23,6 +23,10 @@ variable "ecs_task_specs" {
       cpu    = number
       memory = number
     })
+    cost_api = object({
+      cpu    = number
+      memory = number
+    })
   })
 }
 
@@ -32,6 +36,8 @@ ECR (imageタグを含むURL)
 variable "ecr_url_slack_metrics" {}
 variable "ecr_url_db_migrator" {}
 variable "ecr_url_media_compressor_compress_video" {}
+variable "ecr_url_cost_aggregator" {}
+variable "ecr_url_cost_provider" {}
 
 /************************************************************
 ECS Task Role
@@ -39,3 +45,6 @@ ECS Task Role
 variable "ecs_task_role_arn_slack_metrics" {}
 variable "ecs_task_role_arn_db_migrator" {}
 variable "ecs_task_role_arn_media_compressor_compress_video" {}
+variable "ecs_task_role_arn_cost_api" {}
+
+variable "secrets_manager_arn_datadog_keys" {}

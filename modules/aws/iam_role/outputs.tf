@@ -125,3 +125,7 @@ output "role_arn_cp_q_developer" {
 output "role_arn_slack_metrics_static_edge" {
   value = aws_iam_role.slack_metrics_static_edge.arn
 }
+
+output "role_arn_cost_api" {
+  value = aws_iam_role.cost_api.arn
+}

@@ -238,13 +238,17 @@ module "ecs_task_definition" {
   ecr_url_slack_metrics                   = "${module.ecr.url_slack_metrics}:0d0d629" # CI/CD update target
   ecr_url_db_migrator                     = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
   ecr_url_media_compressor_compress_video = "${module.ecr.url_media_compressor_compress_video}:${local.media_compressor_compress_video_image_tag}"
+  ecr_url_cost_aggregator                 = "${module.ecr.url_cost_aggregator}:${local.cost_aggregator_image_tag}" # CI/CD update target
+  ecr_url_cost_provider                   = "${module.ecr.url_cost_provider}:${local.cost_provider_image_tag}"     # CI/CD update target
 
   ecs_task_execution_role_arn                       = module.iam_role.role_arn_ecs_task_execution
   ecs_task_role_arn_slack_metrics                   = module.iam_role.role_arn_cp_slack_metrics_backend
   ecs_task_role_arn_db_migrator                     = module.iam_role.role_arn_cp_db_migrator
   ecs_task_role_arn_media_compressor_compress_video = module.iam_role.role_arn_media_compressor_compress_video
+  ecs_task_role_arn_cost_api                        = module.iam_role.role_arn_cost_api
 
   secrets_manager_arn_db_main_instance = module.secrets_manager.arn_db_main_instance
+  secrets_manager_arn_datadog_keys     = module.secrets_manager.arn_datadog_keys
   arn_cp_config_bucket                 = module.s3.s3_bucket_arn_cp_config
 
   ecs_task_specs = {
@@ -263,6 +267,10 @@ module "ecs_task_definition" {
     media_compressor_compress_video = {
       cpu    = 2048
       memory = 4096
+    }
+    cost_api = {
+      cpu    = 512
+      memory = 1024
     }
   }
 }

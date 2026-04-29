@@ -33,6 +33,10 @@ locals {
   # firehose-cwlogs-transformer。`make release-image` 後に push したイメージタグへ更新する
   firehose_cwlogs_transformer_image_tag = "f020be2"
 
+  # cost-api タスク定義に同居するコンテナのイメージタグ。CI/CD で更新される。
+  cost_aggregator_image_tag = "40947a0"
+  cost_provider_image_tag   = "40947a0"
+
   # Step Functions コンソールのステートマシン名と一致させる（例: media-compressor-stg）
   media_compressor_state_machine_arn = "arn:aws:states:${local.region}:${local.account_id}:stateMachine:media-compressor-${local.env}"
 

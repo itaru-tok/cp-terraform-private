@@ -45,3 +45,21 @@ variable "audit_log_glue_database_name" {
   default     = ""
   description = "監査ログ Glue Data Catalog のデータベース名（Firehose の Parquet 変換で参照）。空なら audit_log_{env}"
 }
+
+variable "datadog_external_id" {
+  type        = string
+  default     = null
+  description = "Datadog AWS Integration の External ID。null のとき DatadogIntegrationRole は作らない"
+}
+
+variable "datadog_permission_chunks" {
+  type        = list(list(string))
+  default     = []
+  description = "Datadog 統合用 IAM Policy のチャンク（Policyドキュメントの 6144 byte 制限を回避するため呼び出し側で分割）"
+}
+
+variable "datadog_aws_account_id" {
+  type        = string
+  default     = "417141415827"
+  description = "Datadog の AWS アカウント ID。AP1 site = 417141415827"
+}

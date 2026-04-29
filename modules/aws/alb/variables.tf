@@ -25,3 +25,14 @@ variable "sg_alb_id" {
 variable "base_host" {
   type = string
 }
+
+# Datadogコース用。渡したときだけ cost-api リスナールールを作成する
+variable "tg_cost_api_arn" {
+  type    = string
+  default = null
+}
+
+variable "cost_api_host" {
+  type    = string
+  default = null
+}

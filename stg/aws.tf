@@ -51,6 +51,8 @@ module "alb" {
   certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
   tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
   sg_alb_id                = module.security_group.id_alb
+  tg_cost_api_arn          = module.target_group.arn_cost_api
+  cost_api_host            = "cost-api.${local.base_host}"
 }
 
 module "s3" {
@@ -75,6 +77,8 @@ module "cloudfront" {
 module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
   env    = local.env
+  # MEMO: Datadog コース終了後のコスト削減のため false。月額1ドル前後の請求を防ぐ。
+  enable_datadog_keys = false
 }
 
 module "sqs" {
@@ -99,6 +103,10 @@ module "iam_role" {
   media_compressor_bucket_arn        = module.s3.s3_bucket_arn_media_compressor
   media_compressor_state_machine_arn = local.media_compressor_state_machine_arn
   audit_log_bucket_arn               = module.s3.s3_bucket_arn_audit_log
+  # MEMO: Datadog AWS 連携は無効化中（datadog_aws_integration モジュールをコメントアウト）。
+  # null を渡すことで DatadogIntegrationRole を含む関連リソースが destroy される。
+  datadog_external_id       = null
+  datadog_permission_chunks = []
 }
 
 # MEMO: コスト削減のため
@@ -214,6 +222,16 @@ module "ecs" {
     security_group_ids     = [module.security_group.id_slack_metrics_backend]
     subnet_ids             = module.subnet.private_subnet_ids
   }
+
+  cost_api = {
+    name                   = "cost-api-${local.env}"
+    task_definition        = "cost-api-${local.env}"
+    enable_execute_command = true
+    capacity_provider      = "FARGATE_SPOT"
+    target_group_arn       = module.target_group.arn_cost_api
+    security_group_ids     = [module.security_group.id_cost_api]
+    subnet_ids             = module.subnet.private_subnet_ids
+  }
 }
 
 module "ecs_task_definition" {
@@ -224,13 +242,17 @@ module "ecs_task_definition" {
   ecr_url_slack_metrics                   = "${module.ecr.url_slack_metrics}:0d0d629" # CI/CD update target
   ecr_url_db_migrator                     = "${module.ecr.url_db_migrator}:c5291c1"   # CI/CD update target
   ecr_url_media_compressor_compress_video = "${module.ecr.url_media_compressor_compress_video}:${local.media_compressor_compress_video_image_tag}"
+  ecr_url_cost_aggregator                 = "${module.ecr.url_cost_aggregator}:${local.cost_aggregator_image_tag}" # CI/CD update target
+  ecr_url_cost_provider                   = "${module.ecr.url_cost_provider}:${local.cost_provider_image_tag}"     # CI/CD update target
 
   ecs_task_execution_role_arn                       = module.iam_role.role_arn_ecs_task_execution
   ecs_task_role_arn_slack_metrics                   = module.iam_role.role_arn_cp_slack_metrics_backend
   ecs_task_role_arn_db_migrator                     = module.iam_role.role_arn_cp_db_migrator
   ecs_task_role_arn_media_compressor_compress_video = module.iam_role.role_arn_media_compressor_compress_video
+  ecs_task_role_arn_cost_api                        = module.iam_role.role_arn_cost_api
 
   secrets_manager_arn_db_main_instance = module.secrets_manager.arn_db_main_instance
+  secrets_manager_arn_datadog_keys     = module.secrets_manager.arn_datadog_keys
   arn_cp_config_bucket                 = module.s3.s3_bucket_arn_cp_config
 
   ecs_task_specs = {
@@ -249,6 +271,10 @@ module "ecs_task_definition" {
     media_compressor_compress_video = {
       cpu    = 2048
       memory = 4096
+    }
+    cost_api = {
+      cpu    = 512
+      memory = 1024
     }
   }
 }
@@ -473,6 +499,15 @@ module "route53_itaru_uk" {
   records = [
     {
       name = "sm-api.${local.base_host}"
+      type = "A"
+      alias = {
+        name                   = module.alb.dns_name
+        zone_id                = module.alb.zone_id_ap_northeast_1
+        evaluate_target_health = true
+      }
+    },
+    {
+      name = "cost-api.${local.base_host}"
       type = "A"
       alias = {
         name                   = module.alb.dns_name

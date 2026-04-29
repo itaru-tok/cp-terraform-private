@@ -6,7 +6,18 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.5.0" // 6.5.0 以上 6.6.0 未満 を許容
     }
+    datadog = {
+      source  = "DataDog/datadog"
+      version = "~> 3.0"
+    }
   }
+}
+
+# MEMO: Datadog コース終了後 datadog_keys シークレットを削除したため認証情報なし。
+# state からのみ removed する用にプロバイダ自体は宣言を残し、credentials 検証はスキップする。
+# 必要になったら secrets_manager で datadog_keys を復活させて元に戻す。
+provider "datadog" {
+  validate = false
 }
 
 provider "aws" {

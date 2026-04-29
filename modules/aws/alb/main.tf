@@ -40,3 +40,21 @@ resource "aws_lb_listener_rule" "slack_metrics_api" {
     }
   }
 }
+
+resource "aws_lb_listener_rule" "cost_api" {
+  count = var.tg_cost_api_arn != null ? 1 : 0
+
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 3
+
+  action {
+    type             = "forward"
+    target_group_arn = var.tg_cost_api_arn
+  }
+
+  condition {
+    host_header {
+      values = [var.cost_api_host]
+    }
+  }
+}

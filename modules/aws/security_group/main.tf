@@ -34,6 +34,15 @@ resource "aws_security_group" "slack_metrics_backend" {
   }
 }
 
+resource "aws_security_group" "cost_api" {
+  name        = "cp-cost-api-${var.env}"
+  description = "cost-api ecs service sg"
+  vpc_id      = var.vpc_id
+  tags = {
+    Name = "cp-cost-api-${var.env}"
+  }
+}
+
 resource "aws_security_group" "db_migrator" {
   name        = "cp-db-migrator-${var.env}"
   description = "db migrator ecs sg"
@@ -117,6 +126,14 @@ resource "aws_vpc_security_group_ingress_rule" "slack_metrics_backend" {
   ip_protocol                  = "tcp"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "cost_api" {
+  security_group_id            = aws_security_group.cost_api.id
+  referenced_security_group_id = aws_security_group.alb.id
+  from_port                    = 8080
+  to_port                      = 8080
+  ip_protocol                  = "tcp"
+}
+
 # 最小権限: サブネット CIDR ではなく、VPC エンドポイントを呼び出すリソース
 # の SG だけを許可する。今は Lambda だけだが、利用元が増えたら for_each に追加。
 resource "aws_vpc_security_group_ingress_rule" "vpc_endpoint" {
@@ -141,6 +158,14 @@ resource "aws_vpc_security_group_egress_rule" "alb" {
   ip_protocol                  = "tcp"
 }
 
+resource "aws_vpc_security_group_egress_rule" "alb_to_cost_api" {
+  security_group_id            = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.cost_api.id
+  from_port                    = 8080
+  to_port                      = 8080
+  ip_protocol                  = "tcp"
+}
+
 resource "aws_vpc_security_group_egress_rule" "bastion" {
   security_group_id = aws_security_group.bastion.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -155,6 +180,12 @@ resource "aws_vpc_security_group_egress_rule" "nat" {
 
 resource "aws_vpc_security_group_egress_rule" "slack_metrics_backend" {
   security_group_id = aws_security_group.slack_metrics_backend.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "cost_api" {
+  security_group_id = aws_security_group.cost_api.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }

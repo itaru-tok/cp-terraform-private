@@ -29,3 +29,11 @@ output "arn_media_compressor_compress_video" {
 output "arn_without_revision_media_compressor_compress_video" {
   value = aws_ecs_task_definition.media_compressor_compress_video.arn_without_revision
 }
+
+output "arn_cost_api" {
+  value = aws_ecs_task_definition.cost_api.arn
+}
+
+output "arn_without_revision_cost_api" {
+  value = aws_ecs_task_definition.cost_api.arn_without_revision
+}

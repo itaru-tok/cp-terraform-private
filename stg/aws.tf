@@ -101,9 +101,8 @@ module "iam_role" {
   media_compressor_bucket_arn        = module.s3.s3_bucket_arn_media_compressor
   media_compressor_state_machine_arn = local.media_compressor_state_machine_arn
   audit_log_bucket_arn               = module.s3.s3_bucket_arn_audit_log
-  # MEMO: コスト削減のため削除
-  # datadog_external_id                = module.datadog_aws_integration.external_id
-  # datadog_permission_chunks          = module.datadog_aws_integration.permission_chunks
+  datadog_external_id                = module.datadog_aws_integration.external_id
+  datadog_permission_chunks          = module.datadog_aws_integration.permission_chunks
 }
 
 # MEMO: コスト削減のため

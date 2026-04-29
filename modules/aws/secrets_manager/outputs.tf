@@ -8,5 +8,6 @@ output "arn_db_slack_metrics_rds_proxy" {
 }
 
 output "arn_datadog_keys" {
-  value = aws_secretsmanager_secret.datadog_keys.arn
+  value       = try(aws_secretsmanager_secret.datadog_keys[0].arn, null)
+  description = "Datadog 認証情報シークレット。enable_datadog_keys=false の場合は null"
 }

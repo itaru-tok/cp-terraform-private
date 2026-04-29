@@ -9,5 +9,6 @@ resource "aws_secretsmanager_secret" "db_slack_metrics_rds_proxy" {
 }
 
 resource "aws_secretsmanager_secret" "datadog_keys" {
-  name = "datadog-keys-${var.env}"
+  count = var.enable_datadog_keys ? 1 : 0
+  name  = "datadog-keys-${var.env}"
 }

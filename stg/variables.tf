@@ -40,12 +40,13 @@ locals {
   # Step Functions コンソールのステートマシン名と一致させる（例: media-compressor-stg）
   media_compressor_state_machine_arn = "arn:aws:states:${local.region}:${local.account_id}:stateMachine:media-compressor-${local.env}"
 
-  datadog_keys = jsondecode(
-    data.aws_secretsmanager_secret_version.datadog_keys.secret_string
-  )
-  datadog_apm_view_url_cost_provider = "https://ap1.datadoghq.com/apm/entity/service%3Acost-provider?env=${local.env}"
+  # MEMO: Datadog コース終了後 datadog_keys シークレットを削除したため、関連 local もコメントアウト。
+  # datadog_keys = jsondecode(
+  #   data.aws_secretsmanager_secret_version.datadog_keys.secret_string
+  # )
+  # datadog_apm_view_url_cost_provider = "https://ap1.datadoghq.com/apm/entity/service%3Acost-provider?env=${local.env}"
 }
 
-data "aws_secretsmanager_secret_version" "datadog_keys" {
-  secret_id = "datadog-keys-${local.env}"
-}
+# data "aws_secretsmanager_secret_version" "datadog_keys" {
+#   secret_id = "datadog-keys-${local.env}"
+# }

@@ -13,10 +13,11 @@ terraform {
   }
 }
 
+# MEMO: Datadog コース終了後 datadog_keys シークレットを削除したため認証情報なし。
+# state からのみ removed する用にプロバイダ自体は宣言を残し、credentials 検証はスキップする。
+# 必要になったら secrets_manager で datadog_keys を復活させて元に戻す。
 provider "datadog" {
-  api_key = local.datadog_keys.api_key
-  app_key = local.datadog_keys.app_key
-  api_url = "https://api.ap1.datadoghq.com"
+  validate = false
 }
 
 provider "aws" {

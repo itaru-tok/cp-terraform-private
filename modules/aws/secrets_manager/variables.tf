@@ -13,3 +13,9 @@ variable "slack_metrics_db_username_key" {
   description = "db-main-instance シークレット JSON 内のユーザー名キー（無ければ slack_metrics を既定）"
   default     = ""
 }
+
+variable "enable_datadog_keys" {
+  type        = bool
+  description = "Datadog 認証情報用シークレットを作成するかどうか。Datadog コース終了後はコスト削減のため false。"
+  default     = true
+}

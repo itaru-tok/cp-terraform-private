@@ -77,6 +77,8 @@ module "cloudfront" {
 module "secrets_manager" {
   source = "../modules/aws/secrets_manager"
   env    = local.env
+  # MEMO: Datadog コース終了後のコスト削減のため false。月額1ドル前後の請求を防ぐ。
+  enable_datadog_keys = false
 }
 
 module "sqs" {
@@ -101,8 +103,10 @@ module "iam_role" {
   media_compressor_bucket_arn        = module.s3.s3_bucket_arn_media_compressor
   media_compressor_state_machine_arn = local.media_compressor_state_machine_arn
   audit_log_bucket_arn               = module.s3.s3_bucket_arn_audit_log
-  datadog_external_id                = module.datadog_aws_integration.external_id
-  datadog_permission_chunks          = module.datadog_aws_integration.permission_chunks
+  # MEMO: Datadog AWS 連携は無効化中（datadog_aws_integration モジュールをコメントアウト）。
+  # null を渡すことで DatadogIntegrationRole を含む関連リソースが destroy される。
+  datadog_external_id       = null
+  datadog_permission_chunks = []
 }
 
 # MEMO: コスト削減のため

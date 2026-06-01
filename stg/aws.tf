@@ -16,13 +16,15 @@ module "igw" {
 }
 
 module "rtb" {
-  source               = "../modules/aws/route_table"
-  env                  = local.env
-  vpc_id               = module.vpc.id
-  gateway_id           = module.igw.id
-  public_subnet_ids    = module.subnet.public_subnet_ids
-  private_subnet_ids   = module.subnet.private_subnet_ids
-  network_interface_id = module.ec2.network_interface_id_nat_1a
+  source             = "../modules/aws/route_table"
+  env                = local.env
+  vpc_id             = module.vpc.id
+  gateway_id         = module.igw.id
+  public_subnet_ids  = module.subnet.public_subnet_ids
+  private_subnet_ids = module.subnet.private_subnet_ids
+  # MEMO: NAT インスタンス（module.ec2）停止に伴い null。プライベートサブネットからの
+  # 外向き通信は失われる。EC2 を戻したら module.ec2.network_interface_id_nat_1a に戻すこと。
+  network_interface_id = null
 }
 
 module "security_group" {
@@ -42,18 +44,21 @@ module "ecr" {
   env    = local.env
 }
 
-module "alb" {
-  source                   = "../modules/aws/alb"
-  env                      = local.env
-  base_host                = local.base_host
-  vpc_id                   = module.vpc.id
-  public_subnet_ids        = module.subnet.public_subnet_ids
-  certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
-  tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
-  sg_alb_id                = module.security_group.id_alb
-  tg_cost_api_arn          = module.target_group.arn_cost_api
-  cost_api_host            = "cost-api.${local.base_host}"
-}
+# MEMO: Cloud Pratica 全コース完了に伴うコスト削減のためコメントアウト。
+# 月額のメインコスト要因（ALB: 約$16-22/月）を停止する。再開する場合はこのブロックと
+# route53_itaru_uk の sm-api / cost-api レコードを同時に戻すこと。
+# module "alb" {
+#   source                   = "../modules/aws/alb"
+#   env                      = local.env
+#   base_host                = local.base_host
+#   vpc_id                   = module.vpc.id
+#   public_subnet_ids        = module.subnet.public_subnet_ids
+#   certificate_arn          = module.acm_itaru_uk_ap_northeast_1.arn
+#   tg_slack_metrics_api_arn = module.target_group.arn_slack_metrics_api
+#   sg_alb_id                = module.security_group.id_alb
+#   tg_cost_api_arn          = module.target_group.arn_cost_api
+#   cost_api_host            = "cost-api.${local.base_host}"
+# }
 
 module "s3" {
   source = "../modules/aws/s3"
@@ -74,12 +79,14 @@ module "cloudfront" {
   aliases                           = ["sm.${local.base_host}"]
 }
 
-module "secrets_manager" {
-  source = "../modules/aws/secrets_manager"
-  env    = local.env
-  # MEMO: Datadog コース終了後のコスト削減のため false。月額1ドル前後の請求を防ぐ。
-  enable_datadog_keys = false
-}
+# MEMO: Cloud Pratica 全コース完了に伴うコスト削減のためコメントアウト。
+# Secrets Manager は 1 シークレット/月 ≒ $0.40。db-main-instance シークレットを停止。
+# ecs_task_definition への参照は null に切り替え済み（main.tf 内の datadog_keys/db_main_instance）。
+# module "secrets_manager" {
+#   source              = "../modules/aws/secrets_manager"
+#   env                 = local.env
+#   enable_datadog_keys = false
+# }
 
 module "sqs" {
   source     = "../modules/aws/sqs"
@@ -184,30 +191,35 @@ module "iam_role" {
 #   depends_on = [module.eks]
 # }
 
-module "ec2" {
-  source           = "../modules/aws/ec2"
-  env              = local.env
-  public_subnet_id = module.subnet.id_public_subnet_1a
-  bastion = {
-    ami_id               = "ami-0d48053661ff2089b"
-    iam_instance_profile = module.iam_role.instance_profile_cp_bastion
-    security_group_id    = module.security_group.id_bastion
-  }
-  nat_1a = {
-    # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
-    ami_id               = "ami-063fed300ac346a89"
-    iam_instance_profile = module.iam_role.instance_profile_cp_nat
-    security_group_id    = module.security_group.id_nat
-  }
-}
+# MEMO: Cloud Pratica 全コース完了に伴うコスト削減のためコメントアウト。
+# bastion / NAT 用 t2.micro 2 台 + EBS の課金（およそ月額 $10 前後）を停止する。
+# 戻すときは module.rtb.network_interface_id を module.ec2.network_interface_id_nat_1a に戻すこと。
+# module "ec2" {
+#   source           = "../modules/aws/ec2"
+#   env              = local.env
+#   public_subnet_id = module.subnet.id_public_subnet_1a
+#   bastion = {
+#     ami_id               = "ami-0d48053661ff2089b"
+#     iam_instance_profile = module.iam_role.instance_profile_cp_bastion
+#     security_group_id    = module.security_group.id_bastion
+#   }
+#   nat_1a = {
+#     # TODO: NATのインバウンドルールを2つ加える（マイグレーション実行時にコンソールから直接設定済み）
+#     ami_id               = "ami-063fed300ac346a89"
+#     iam_instance_profile = module.iam_role.instance_profile_cp_nat
+#     security_group_id    = module.security_group.id_nat
+#   }
+# }
 
-module "rds" {
-  source               = "../modules/aws/rds"
-  env                  = local.env
-  private_subnet_1a_id = module.subnet.id_private_subnet_1a
-  private_subnet_1c_id = module.subnet.id_private_subnet_1c
-  db_security_group_id = module.security_group.id_db
-}
+# MEMO: Cloud Pratica 全コース完了に伴うコスト削減のためコメントアウト。
+# RDS (db.t3.micro + 20GB gp3) の課金を停止。再開する場合はこのブロックを戻すこと。
+# module "rds" {
+#   source               = "../modules/aws/rds"
+#   env                  = local.env
+#   private_subnet_1a_id = module.subnet.id_private_subnet_1a
+#   private_subnet_1c_id = module.subnet.id_private_subnet_1c
+#   db_security_group_id = module.security_group.id_db
+# }
 
 module "ecs" {
   source = "../modules/aws/ecs"
@@ -251,8 +263,11 @@ module "ecs_task_definition" {
   ecs_task_role_arn_media_compressor_compress_video = module.iam_role.role_arn_media_compressor_compress_video
   ecs_task_role_arn_cost_api                        = module.iam_role.role_arn_cost_api
 
-  secrets_manager_arn_db_main_instance = module.secrets_manager.arn_db_main_instance
-  secrets_manager_arn_datadog_keys     = module.secrets_manager.arn_datadog_keys
+  # MEMO: module.secrets_manager コメントアウトに伴い null。
+  # ecs_task_definition モジュール内では datadog_keys は != null チェックで分岐、
+  # db_main_instance は変数宣言のみで実体未使用のため null 渡しで支障なし。
+  secrets_manager_arn_db_main_instance = null
+  secrets_manager_arn_datadog_keys     = null
   arn_cp_config_bucket                 = module.s3.s3_bucket_arn_cp_config
 
   ecs_task_specs = {
@@ -497,24 +512,25 @@ module "route53_itaru_uk" {
   zone_name = local.base_host
 
   records = [
-    {
-      name = "sm-api.${local.base_host}"
-      type = "A"
-      alias = {
-        name                   = module.alb.dns_name
-        zone_id                = module.alb.zone_id_ap_northeast_1
-        evaluate_target_health = true
-      }
-    },
-    {
-      name = "cost-api.${local.base_host}"
-      type = "A"
-      alias = {
-        name                   = module.alb.dns_name
-        zone_id                = module.alb.zone_id_ap_northeast_1
-        evaluate_target_health = true
-      }
-    },
+    # MEMO: ALB 停止に伴いコメントアウト。ALB を戻したら同時に有効化すること。
+    # {
+    #   name = "sm-api.${local.base_host}"
+    #   type = "A"
+    #   alias = {
+    #     name                   = module.alb.dns_name
+    #     zone_id                = module.alb.zone_id_ap_northeast_1
+    #     evaluate_target_health = true
+    #   }
+    # },
+    # {
+    #   name = "cost-api.${local.base_host}"
+    #   type = "A"
+    #   alias = {
+    #     name                   = module.alb.dns_name
+    #     zone_id                = module.alb.zone_id_ap_northeast_1
+    #     evaluate_target_health = true
+    #   }
+    # },
     # MEMO: コスト削減のため（data.aws_lb.k8s_shared 停止に合わせてコメントアウト）
     # {
     #   name = "sm-api-v2.${local.base_host}"

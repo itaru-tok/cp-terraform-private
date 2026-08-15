@@ -36,3 +36,28 @@ module "cloud_tasks" {
   ]
 }
 
+module "hive_converter" {
+  source     = "../service_account_unit"
+  project    = var.project
+  account_id = "ec-hive-converter-${var.env}"
+  roles = [
+    "roles/storage.objectUser",
+  ]
+}
+
+module "hive_converter_trigger" {
+  source     = "../service_account_unit"
+  project    = var.project
+  account_id = "ec-hive-converter-trigger-${var.env}"
+  roles = [
+    "roles/run.invoker",
+    "roles/eventarc.eventReceiver",
+    "roles/storage.bucketViewer",
+  ]
+}
+
+resource "google_project_iam_member" "cloud_build_storage_object_viewer" {
+  project = var.project
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:cloud-build-${var.env}@${var.project}.iam.gserviceaccount.com"
+}

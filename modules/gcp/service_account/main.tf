@@ -61,3 +61,18 @@ resource "google_project_iam_member" "cloud_build_storage_object_viewer" {
   role    = "roles/storage.objectViewer"
   member  = "serviceAccount:cloud-build-${var.env}@${var.project}.iam.gserviceaccount.com"
 }
+
+module "ec_dbt" {
+  source     = "../service_account_unit"
+  project    = var.project
+  account_id = "ec-dbt-${var.env}"
+  roles = [
+    "roles/bigquery.jobUser",
+    "roles/bigquery.dataEditor",
+    "roles/storage.objectViewer",
+    "roles/datacatalog.categoryFineGrainedReader",
+    "projects/${var.project}/roles/bigquery.datasetEditor",
+  ]
+
+  depends_on = [google_project_iam_custom_role.bigquery_dataset_editor]
+}

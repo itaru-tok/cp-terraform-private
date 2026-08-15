@@ -4,10 +4,11 @@ output "alb_ingress_public_subnets" {
   description = "kubectl patch や Ingress annotation に貼り付け可能なパブリックサブネット ID"
 }
 
-output "acm_certificate_arn_ap_northeast_1" {
-  value       = module.acm_itaru_uk_ap_northeast_1.arn
-  description = "stg の ALB Ingress HTTPS 用 ACM ARN（ap-northeast-1）"
-}
+# MEMO: acm_itaru_uk_ap_northeast_1 コメントアウトに伴い停止。
+# output "acm_certificate_arn_ap_northeast_1" {
+#   value       = module.acm_itaru_uk_ap_northeast_1.arn
+#   description = "stg の ALB Ingress HTTPS 用 ACM ARN（ap-northeast-1）"
+# }
 
 output "role_arn_cp_k8s_log_transfer" {
   value       = module.iam_role.role_arn_cp_k8s_log_transfer

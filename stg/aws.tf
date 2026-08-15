@@ -63,21 +63,27 @@ module "ecr" {
 module "s3" {
   source = "../modules/aws/s3"
   env    = local.env
+  # MEMO: CloudFront 停止に伴い null（バケットポリシーが destroy される）。
+  # CloudFront を戻したら module.cloudfront.distribution_arn に戻すこと。
   slack_metrics = {
-    cloudfront_distribution_arn = module.cloudfront.distribution_arn
+    cloudfront_distribution_arn = null
   }
   media_compressor = {
     enabled = true
   }
 }
 
-module "cloudfront" {
-  source                            = "../modules/aws/cloudfront"
-  env                               = local.env
-  certificate_arn                   = module.acm_itaru_uk_us_east_1.arn
-  amplify_domain_name_slack_metrics = local.amplify_domain_name_slack_metrics
-  aliases                           = ["sm.${local.base_host}"]
-}
+# MEMO: コスト完全ゼロ化のためコメントアウト。Route 53 ホストゾーン（$0.50/月）削除に伴い、
+# 依存する CloudFront / ACM / SES も同時に停止。sm.${local.base_host} は名前解決不能になる。
+# 再開時はこのブロックと acm_itaru_uk_*、ses、route53_itaru_uk、s3 の
+# cloudfront_distribution_arn、outputs.tf の acm_certificate_arn_ap_northeast_1 を同時に戻すこと。
+# module "cloudfront" {
+#   source                            = "../modules/aws/cloudfront"
+#   env                               = local.env
+#   certificate_arn                   = module.acm_itaru_uk_us_east_1.arn
+#   amplify_domain_name_slack_metrics = local.amplify_domain_name_slack_metrics
+#   aliases                           = ["sm.${local.base_host}"]
+# }
 
 # MEMO: Cloud Pratica 全コース完了に伴うコスト削減のためコメントアウト。
 # Secrets Manager は 1 シークレット/月 ≒ $0.40。db-main-instance シークレットを停止。
@@ -94,13 +100,14 @@ module "sqs" {
   account_id = local.account_id
 }
 
-module "ses" {
-  source                 = "../modules/aws/ses"
-  env                    = local.env
-  domain                 = local.base_host
-  mail_from_domain       = local.ses_mail_from_domain
-  behavior_on_mx_failure = "USE_DEFAULT_VALUE"
-}
+# MEMO: コスト完全ゼロ化のためコメントアウト（Route 53 ゾーン削除に伴い DKIM 検証も不能）。
+# module "ses" {
+#   source                 = "../modules/aws/ses"
+#   env                    = local.env
+#   domain                 = local.base_host
+#   mail_from_domain       = local.ses_mail_from_domain
+#   behavior_on_mx_failure = "USE_DEFAULT_VALUE"
+# }
 
 module "iam_role" {
   source                             = "../modules/aws/iam_role"
@@ -483,21 +490,22 @@ module "event_bridge_scheduler" {
   }
 }
 
-module "acm_itaru_uk_ap_northeast_1" {
-  source      = "../modules/aws/acm_unit"
-  domain_name = "*.${local.base_host}"
-  providers = {
-    aws = aws
-  }
-}
-
-module "acm_itaru_uk_us_east_1" {
-  source      = "../modules/aws/acm_unit"
-  domain_name = "*.${local.base_host}"
-  providers = {
-    aws = aws.us_east_1
-  }
-}
+# MEMO: コスト完全ゼロ化のためコメントアウト（Route 53 ゾーン削除に伴い DNS 検証も不能）。
+# module "acm_itaru_uk_ap_northeast_1" {
+#   source      = "../modules/aws/acm_unit"
+#   domain_name = "*.${local.base_host}"
+#   providers = {
+#     aws = aws
+#   }
+# }
+#
+# module "acm_itaru_uk_us_east_1" {
+#   source      = "../modules/aws/acm_unit"
+#   domain_name = "*.${local.base_host}"
+#   providers = {
+#     aws = aws.us_east_1
+#   }
+# }
 
 # EKS Ingress（ALB Controller）が作成する共有 ALB — sm-api-v2 はここを向ける
 # MEMO: コスト削減のため（EKS 停止時はコメントアウト。復旧後に sm-api-v2 レコードも戻す）
@@ -507,11 +515,14 @@ module "acm_itaru_uk_us_east_1" {
 #   }
 # }
 
-module "route53_itaru_uk" {
-  source    = "../modules/aws/route53_unit"
-  zone_name = local.base_host
-
-  records = [
+# MEMO: コスト完全ゼロ化のためコメントアウト。ホストゾーン $0.50/月 を停止。
+# 削除するとゾーンの NS レコードが変わるため、再作成時はレジストラ側の
+# ネームサーバー再設定が必要になる点に注意。
+# module "route53_itaru_uk" {
+#   source    = "../modules/aws/route53_unit"
+#   zone_name = local.base_host
+#
+#   records = [
     # MEMO: ALB 停止に伴いコメントアウト。ALB を戻したら同時に有効化すること。
     # {
     #   name = "sm-api.${local.base_host}"
@@ -541,28 +552,28 @@ module "route53_itaru_uk" {
     #     evaluate_target_health = true
     #   }
     # },
-    {
-      name = "sm.${local.base_host}"
-      type = "A"
-      alias = {
-        name                   = "${module.cloudfront.domain_name}."
-        zone_id                = module.cloudfront.zone_id_us_east_1
-        evaluate_target_health = false
-      }
-    },
-    {
-      name   = trimsuffix(tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_name, ".")
-      type   = "CNAME"
-      values = [tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_value]
-      ttl    = 300
-    }
-  ]
-
-  ses = {
-    enable      = true
-    dkim_tokens = module.ses.dkim_tokens
-  }
-}
+#     {
+#       name = "sm.${local.base_host}"
+#       type = "A"
+#       alias = {
+#         name                   = "${module.cloudfront.domain_name}."
+#         zone_id                = module.cloudfront.zone_id_us_east_1
+#         evaluate_target_health = false
+#       }
+#     },
+#     {
+#       name   = trimsuffix(tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_name, ".")
+#       type   = "CNAME"
+#       values = [tolist(module.acm_itaru_uk_ap_northeast_1.domain_validation_options)[0].resource_record_value]
+#       ttl    = 300
+#     }
+#   ]
+#
+#   ses = {
+#     enable      = true
+#     dkim_tokens = module.ses.dkim_tokens
+#   }
+# }
 
 module "ssm_parameter" {
   source                      = "../modules/aws/ssm_parameter"

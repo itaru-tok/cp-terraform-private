@@ -76,3 +76,14 @@ module "ec_dbt" {
 
   depends_on = [google_project_iam_custom_role.bigquery_dataset_editor]
 }
+
+module "ec_workflows" {
+  source     = "../service_account_unit"
+  project    = var.project
+  account_id = "ec-workflows-${var.env}"
+  roles = [
+    "roles/run.developer",
+    "roles/logging.logWriter",
+    "roles/workflows.invoker",
+  ]
+}

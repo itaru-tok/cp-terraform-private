@@ -5,3 +5,7 @@ output "email_slack_metrics_backend" {
 output "email_ec_dbt" {
   value = module.ec_dbt.email
 }
+
+output "email_ec_workflows" {
+  value = module.ec_workflows.email
+}
